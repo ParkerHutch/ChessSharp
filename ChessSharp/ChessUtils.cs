@@ -85,8 +85,36 @@ public class Pawn(int row, int col, Color color) : IPiece
 				board.BoardArr[myLoc.Row + directionOffset, myLoc.Col]
 			));
 		}
-		// TODO look for en passant
-		return validMoves;
+
+        // check if the pawn can move diagonally
+		if (myLoc.Col + 1 < board.BoardArr.GetLength(1))
+		{
+            IPiece? pieceDiagonalLeft = board.BoardArr[
+            myLoc.Row + directionOffset, myLoc.Col + 1].Piece;
+			if (pieceDiagonalLeft != null)
+			{
+				validMoves.Add(new Move(
+					board.BoardArr[myLoc.Row, myLoc.Col],
+					board.BoardArr[myLoc.Row + directionOffset, myLoc.Col + 1]
+				));
+			}
+        }
+
+        if (myLoc.Col - 1 >= 0)
+        {
+            IPiece? pieceDiagonalLeft = board.BoardArr[
+            myLoc.Row + directionOffset, myLoc.Col - 1].Piece;
+            if (pieceDiagonalLeft != null)
+            {
+                validMoves.Add(new Move(
+                    board.BoardArr[myLoc.Row, myLoc.Col],
+                    board.BoardArr[myLoc.Row + directionOffset, myLoc.Col - 1]
+                ));
+            }
+        }
+
+        // TODO look for en passant
+        return validMoves;
 	}
 
     public override string ToString()
