@@ -68,7 +68,6 @@ public class Pawn(int row, int col, Color color) : IPiece
 	public Color Color => color;
 
 	Location IPiece.Location { get; set; } = new(row, col);
-	public PieceType type { get; } = PieceType.Pawn;
 
 	public IEnumerable<Move> GetValidMoves(Board board)
 	{
@@ -128,8 +127,32 @@ public class Pawn(int row, int col, Color color) : IPiece
     }
 }
 
+public class Rook(int row, int col, Color color) : IPiece
+{
+    public PieceType Type => PieceType.Rook;
 
+    public Color Color => color;
 
+    Location IPiece.Location { get; set; } = new(row, col);
+
+    public IEnumerable<Move> GetValidMoves(Board board)
+    {
+        List<Move> validMoves = new List<Move>();
+
+        // TODO look for en passant
+        return validMoves;
+    }
+
+    public override string ToString()
+    {
+        return "R";
+    }
+
+    public string getNotation()
+    {
+        return "R";
+    }
+}
 
 public class Board
 {
@@ -163,6 +186,12 @@ public class Board
 
 		if (!empty)
 		{
+			// place rooks
+			BoardArr[0, 0].Piece = new Rook(0, 0, Color.White);
+            BoardArr[0, 7].Piece = new Rook(0, 7, Color.White);
+            BoardArr[7, 0].Piece = new Rook(7, 0, Color.Black);
+            BoardArr[7, 7].Piece = new Rook(7, 7, Color.Black);
+            // place pawns
             for (int col = 0; col < 8; ++col)
             {
                 BoardArr[1, col].Piece = new Pawn(1, col, Color.White);

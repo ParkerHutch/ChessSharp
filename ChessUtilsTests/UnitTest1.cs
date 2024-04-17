@@ -69,4 +69,52 @@ namespace ChessUtilsTests
             CollectionAssert.Contains(blackPawnSquare2.Piece.GetValidMoves(board).ToList(), blackPawn2DiagonalMove, message: $"Moves present: {string.Join(',', blackPawnSquare2.Piece.GetValidMoves(board).ToList())}");
         }
     }
+
+    [TestClass]
+    public class TestRookMoves
+    {
+        Board board = new(true);
+
+        [TestInitialize]
+        public void setupBoard()
+        {
+            board = new(true);
+        }
+
+        [TestMethod]
+        public void TestCanMoveForwardUntilOccupiedByFriendlyPiece()
+        {
+            int lowerRow = 2;
+            int upperRow = 5;
+            Board.Square lowerRookSquare = board.BoardArr[lowerRow, 0];
+            Board.Square upperRookSquare = board.BoardArr[upperRow, 0];
+
+            lowerRookSquare.Piece = new Rook(lowerRow, 0, Color.White);
+            upperRookSquare.Piece = new Rook(upperRow, 0, Color.White);
+
+            // verify that both rooks can move to any empty square between them
+            for (int row = lowerRow + 1; row < upperRow; ++row)
+            {
+                Move lowerRookMove = new(lowerRookSquare, board.BoardArr[row, 0]);
+
+                CollectionAssert.Contains(lowerRookSquare.Piece.GetValidMoves(board).ToList(), lowerRookMove, message: $"Moves present: {string.Join(',', lowerRookSquare.Piece.GetValidMoves(board).ToList())}");
+
+                Move upperRookMove = new(upperRookSquare, board.BoardArr[row, 0]);
+                CollectionAssert.Contains(upperRookSquare.Piece.GetValidMoves(board).ToList(), upperRookMove, message: $"Moves present: {string.Join(',', upperRookSquare.Piece.GetValidMoves(board).ToList())}");
+            }
+
+            // verify that rooks can't move on top of or past each other
+            for (int row = upperRow; row < 8; ++row)
+            {
+                Move invalidLowerRookMove = new(lowerRookSquare, board.BoardArr[row, 0]);
+                CollectionAssert.DoesNotContain(lowerRookSquare.Piece.GetValidMoves(board).ToList(), invalidLowerRookMove);
+            }
+
+            for (int row = lowerRow; lowerRow >= 0; --row)
+            {
+                Move invalidUpperRookMove = new(upperRookSquare, board.BoardArr[row, 0]);
+                CollectionAssert.DoesNotContain(upperRookSquare.Piece.GetValidMoves(board).ToList(), invalidUpperRookMove);
+            }
+        }
+    }
 }
