@@ -1,8 +1,14 @@
 ﻿using System;
+using static ChessSharp.Board;
 using static ChessSharp.Pawn;
 
 namespace ChessSharp;
 
+public enum Color
+{
+	White,
+	Black
+}
 public enum PieceType
 {
 	King,
@@ -14,36 +20,53 @@ public enum PieceType
 	None
 }
 
-public class BoardLocation(int row, int col)
-{
-	public int Row { get; set; } = row;
-	public int Col { get; set; } = col;
-}
-public class Move
-{
 
+public class Move(Square lastSquare, Square nextSquare)
+{
+	Square LastSquare = lastSquare;
+	Square nextSquare = nextSquare;
 }
 
 public interface IPiece // use abstract base class?
 {
-    BoardLocation Location { get; set; }
+    Location Location { get; set; }
     PieceType Type { get; }
+	public Color Color { get; }
     public IEnumerable<Move> GetValidMoves(Board board);
 
 	//public override string ToString; // need to use an abstract base class: https://stackoverflow.com/questions/510341/force-subclasses-of-an-interface-to-implement-tostring
 	public string getNotation();
 }
 
-public class Pawn(int row, int col) : IPiece
+public class Pawn(int row, int col, Color color) : IPiece
 {
 	public PieceType Type => PieceType.Pawn;
 
-	BoardLocation IPiece.Location { get; set; } = new(row, col);
+	public Color Color => color;
+
+	Location IPiece.Location { get; set; } = new(row, col);
 	public PieceType type { get; } = PieceType.Pawn;
 
 	public IEnumerable<Move> GetValidMoves(Board board)
 	{
 		List<Move> validMoves = new List<Move>();
+		int directionOffset = color == Color.White ? 0 : 1;
+		Board.Location myLoc = (this as IPiece).Location;
+		if (myLoc.Row < 8 && myLoc.Row > 0)
+		{
+			IPiece? pieceAhead = board.BoardArr[
+				myLoc.Row + directionOffset, myLoc.Col].Piece;
+			if (pieceAhead == null)
+			{
+				validMoves.Add(new Move(
+					board.BoardArr[myLoc.Row, myLoc.Col],
+					board.BoardArr[myLoc.Row + directionOffset, myLoc.Col]
+				));
+			}
+
+        }
+
+		// TODO look for en passant
 		return validMoves;
 	}
 
@@ -63,9 +86,15 @@ public class Pawn(int row, int col) : IPiece
 
 public class Board
 {
-	public class Square(int row, int col, IPiece? piece = null)
+    public class Location(int row, int col)
+    {
+        public int Row { get; set; } = row;
+        public int Col { get; set; } = col;
+    }
+
+    public class Square(int row, int col, IPiece? piece = null)
 	{
-		public BoardLocation Location { get; set; } = new(row, col);
+		public Location Location { get; set; } = new(row, col);
 		public IPiece? Piece { get; set; } = piece;
 
         public override string ToString()
@@ -73,21 +102,9 @@ public class Board
             return Piece?.ToString() ?? "-";
         }
     }
-	public static Square[,] BoardArr = new Square[8, 8];
+	public Square[,] BoardArr = new Square[8, 8];
 
-	//private static Square[,] _boardArr = new Square[8, 8]
-	//{
-	//	new Square[8] {},
-	//	new Square[8] { },
-	//       new Square[8] { },
-	//       new Square[8] { },
-	//       new Square[8] { },
-	//       new Square[8] { },
-	//       new Square[8] { },
-	//       new Square[8] { }
-	//   }
-
-	private static void SetBoard()
+	private void SetBoard()
 	{
 		for (int row = 0; row < 8; ++row)
 		{
@@ -96,7 +113,18 @@ public class Board
 				BoardArr[row, col] = new Square(row, col);
 			}
 		}
-	}
+
+        for (int col = 0; col < 8; ++col)
+        {
+			BoardArr[1, col].Piece = new Pawn(1, col, Color.White);
+        }
+
+        for (int col = 0; col < 8; ++col)
+        {
+            BoardArr[6, col].Piece = new Pawn(1, col, Color.Black);
+        }
+
+    }
 	public Board()
 	{
 		SetBoard();
