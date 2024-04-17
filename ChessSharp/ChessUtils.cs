@@ -24,7 +24,30 @@ public enum PieceType
 public class Move(Square lastSquare, Square nextSquare)
 {
 	Square LastSquare = lastSquare;
-	Square nextSquare = nextSquare;
+	Square NextSquare = nextSquare;
+	public override string ToString()
+	{
+		return $"{LastSquare.Piece} ({LastSquare.Location.Row}, {LastSquare.Location.Col}) to "
+			+ $"({NextSquare.Location.Row}, {NextSquare.Location.Col})";
+
+	}
+
+    public override bool Equals(object? obj)
+    {
+		var otherMove = obj as Move;
+		if (otherMove == null)
+		{
+			return false;
+		}
+
+		if (otherMove.LastSquare == LastSquare && 
+			otherMove.NextSquare == NextSquare)
+		{
+			return true;
+		}
+		return false;
+    }
+
 }
 
 public interface IPiece // use abstract base class?
@@ -50,22 +73,18 @@ public class Pawn(int row, int col, Color color) : IPiece
 	public IEnumerable<Move> GetValidMoves(Board board)
 	{
 		List<Move> validMoves = new List<Move>();
-		int directionOffset = color == Color.White ? 0 : 1;
+		int directionOffset = color == Color.White ? 1 : -1;
 		Board.Location myLoc = (this as IPiece).Location;
-		if (myLoc.Row < 8 && myLoc.Row > 0)
+		// TODO check if the indexes are in bounds
+        IPiece? pieceAhead = board.BoardArr[
+			myLoc.Row + directionOffset, myLoc.Col].Piece;
+		if (pieceAhead == null)
 		{
-			IPiece? pieceAhead = board.BoardArr[
-				myLoc.Row + directionOffset, myLoc.Col].Piece;
-			if (pieceAhead == null)
-			{
-				validMoves.Add(new Move(
-					board.BoardArr[myLoc.Row, myLoc.Col],
-					board.BoardArr[myLoc.Row + directionOffset, myLoc.Col]
-				));
-			}
-
-        }
-
+			validMoves.Add(new Move(
+				board.BoardArr[myLoc.Row, myLoc.Col],
+				board.BoardArr[myLoc.Row + directionOffset, myLoc.Col]
+			));
+		}
 		// TODO look for en passant
 		return validMoves;
 	}
@@ -104,7 +123,7 @@ public class Board
     }
 	public Square[,] BoardArr = new Square[8, 8];
 
-	private void SetBoard()
+	private void SetBoard(bool empty)
 	{
 		for (int row = 0; row < 8; ++row)
 		{
@@ -114,21 +133,23 @@ public class Board
 			}
 		}
 
-        for (int col = 0; col < 8; ++col)
-        {
-			BoardArr[1, col].Piece = new Pawn(1, col, Color.White);
-        }
+		if (!empty)
+		{
+            for (int col = 0; col < 8; ++col)
+            {
+                BoardArr[1, col].Piece = new Pawn(1, col, Color.White);
+            }
 
-        for (int col = 0; col < 8; ++col)
-        {
-            BoardArr[6, col].Piece = new Pawn(1, col, Color.Black);
+            for (int col = 0; col < 8; ++col)
+            {
+                BoardArr[6, col].Piece = new Pawn(1, col, Color.Black);
+            }
         }
-
     }
-	public Board()
+	public Board(bool empty)
 	{
-		SetBoard();
-	}
+       SetBoard(empty);
+    }
 
 	public void Print()
 	{

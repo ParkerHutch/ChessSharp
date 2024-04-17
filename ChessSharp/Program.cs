@@ -4,7 +4,7 @@ using ChessSharp;
 Console.WriteLine("Hello, World!");
 
 
-Board board = new();
+Board board = new(false);
 
 board.Print();
 
