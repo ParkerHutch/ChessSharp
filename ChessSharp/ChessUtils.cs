@@ -361,6 +361,28 @@ public class Knight(int row, int col, Color color) : IPiece
     public IEnumerable<Move> GetValidMoves(Board board)
     {
         List<Move> validMoves = new List<Move>();
+        Location myLoc = (this as IPiece).Location;
+
+        List<(int moveRow, int moveCol)> possibleMovePositions = [
+            (myLoc.Row - 1, myLoc.Col - 2),
+            (myLoc.Row - 1, myLoc.Col + 2),
+            (myLoc.Row + 1, myLoc.Col - 2),
+            (myLoc.Row + 1, myLoc.Col + 2),
+            (myLoc.Row - 2, myLoc.Col - 1),
+            (myLoc.Row - 2, myLoc.Col + 1),
+            (myLoc.Row + 2, myLoc.Col - 1),
+            (myLoc.Row + 2, myLoc.Col + 1),
+        ];
+
+        foreach((int moveRow, int moveCol) in possibleMovePositions)
+        {
+            if (board.getSquareAt(moveRow, moveCol, out Square? moveSquare))
+            {
+                if (moveSquare!.Piece == null || moveSquare!.Piece.Color != Color) {
+                    validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], moveSquare));
+                }
+            }
+        }
 
         return validMoves;
     }
