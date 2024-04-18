@@ -10,7 +10,6 @@
         Foreground="{StaticResource TextColor}"
         FontFamily="{StaticResource MainFont}"
         WindowStartupLocation="CenterScreen"
-        Icon="Assets/icon.ico"
         >
     <Grid>
         <Grid.RowDefinitions>

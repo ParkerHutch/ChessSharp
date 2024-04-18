@@ -9,11 +9,34 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\DroidSansMono.ttf" />
+    <None Remove="Assets\Empty.png" />
+    <None Remove="Assets\icon.ico" />
     <None Remove="Assets\king_wikimedia_commons.png" />
+    <None Remove="Assets\solid_black_wikimedia_commons.png" />
+    <None Remove="Assets\solid_white_wikimedia_commons.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <COMReference Include="{d37e2a3e-8545-3a39-9f4f-31827c9124ab}">
+      <WrapperTool>tlbimp</WrapperTool>
+      <VersionMinor>4</VersionMinor>
+      <VersionMajor>2</VersionMajor>
+      <Guid>d37e2a3e-8545-3a39-9f4f-31827c9124ab</Guid>
+    </COMReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="8.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\DroidSansMono.ttf" />
+    <Resource Include="Assets\Empty.png" />
+    <Resource Include="Assets\icon.ico" />
     <Resource Include="Assets\king_wikimedia_commons.png" />
+    <Resource Include="Assets\solid_black_wikimedia_commons.png" />
+    <Resource Include="Assets\solid_white_wikimedia_commons.png" />
   </ItemGroup>
 
 </Project>
