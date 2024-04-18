@@ -236,6 +236,106 @@ public class Bishop(int row, int col, Color color) : IPiece
     {
         List<Move> validMoves = new List<Move>();
 
+        Location myLoc = (this as IPiece).Location;
+        bool northwestDiagonalBlocked = false;
+        bool northeastDiagonalBlocked = false;
+        bool southwestDiagonalBlocked = false;
+        bool southeastDiagonalBlocked = false;
+
+        for (int squaresAwayFromBishop = 1; squaresAwayFromBishop < 8; ++squaresAwayFromBishop)
+        {
+            // candidates are (row + sqA, col + sqA), (row + sqA, col - sqA), (row - sqA, col - sqA), (row - sqA, col + sqA)
+            // stop searching a diagonal once it's blocked by a piece
+            if (!northwestDiagonalBlocked && 
+                board.getSquareAt(
+                    myLoc.Row + squaresAwayFromBishop, 
+                    myLoc.Col - squaresAwayFromBishop, 
+                    out Board.Square? northwestSquare
+            ))
+            {
+                IPiece? piece;
+                if ((piece = northwestSquare!.Piece) != null)
+                {
+                    if (piece.Color != Color)
+                    {
+                        validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], northwestSquare));
+                    }
+                    northwestDiagonalBlocked = true; // stop exploring this diagonal
+                } 
+                else
+                {
+                    validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], northwestSquare));
+                }
+            }
+
+            if (!northeastDiagonalBlocked &&
+                board.getSquareAt(
+                    myLoc.Row + squaresAwayFromBishop,
+                    myLoc.Col + squaresAwayFromBishop,
+                    out Board.Square? northeastSquare
+            ))
+            {
+                IPiece? piece;
+                if ((piece = northeastSquare!.Piece) != null)
+                {
+                    if (piece.Color != Color)
+                    {
+                        validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], northeastSquare));
+                    }
+                    northeastDiagonalBlocked = true; // stop exploring this diagonal
+                }
+                else
+                {
+                    validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], northeastSquare));
+                }
+            }
+
+            if (!southwestDiagonalBlocked &&
+                board.getSquareAt(
+                    myLoc.Row - squaresAwayFromBishop,
+                    myLoc.Col - squaresAwayFromBishop,
+                    out Board.Square? southwestSquare
+            ))
+            {
+                IPiece? piece;
+                if ((piece = southwestSquare!.Piece) != null)
+                {
+                    if (piece.Color != Color)
+                    {
+                        validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], southwestSquare));
+                    }
+                    southwestDiagonalBlocked = true; // stop exploring this diagonal
+                }
+                else
+                {
+                    validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], southwestSquare));
+                }
+            }
+
+            if (!southeastDiagonalBlocked &&
+                board.getSquareAt(
+                    myLoc.Row - squaresAwayFromBishop,
+                    myLoc.Col + squaresAwayFromBishop,
+                    out Board.Square? southeastSquare
+            ))
+            {
+                IPiece? piece;
+                if ((piece = southeastSquare!.Piece) != null)
+                {
+                    if (piece.Color != Color)
+                    {
+                        validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], southeastSquare));
+                    }
+                    southeastDiagonalBlocked = true; // stop exploring this diagonal
+                }
+                else
+                {
+                    validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], southeastSquare));
+                }
+            }
+
+        }
+
         return validMoves;
     }
 
@@ -330,6 +430,17 @@ public class King(int row, int col, Color color) : IPiece
 
 public class Board
 {
+    // Return true and store the square at (row, col) if that position is in the bounds of the board
+    public bool getSquareAt(int row, int col, out Square? square)
+    {
+        if (row >= 0 && row < 8 && col >= 0 && col < 8)
+        {
+            square = BoardArr[row, col];
+            return true;
+        }
+        square = null;
+        return false;
+    }
     public class Location(int row, int col)
     {
         public int Row { get; set; } = row;
