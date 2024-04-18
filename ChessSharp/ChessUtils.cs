@@ -435,6 +435,25 @@ public class King(int row, int col, Color color) : IPiece
     public IEnumerable<Move> GetValidMoves(Board board)
     {
         List<Move> validMoves = new List<Move>();
+        Location myLoc = (this as IPiece).Location;
+
+        for (int row = myLoc.Row - 1; row <= myLoc.Row + 1; row++)
+        {
+            for (int col = myLoc.Col - 1; col <= myLoc.Col + 1; col++)
+            {
+                if (row == myLoc.Row && col == myLoc.Col)
+                {
+                    continue;
+                }
+                if (board.getSquareAt(row, col, out Board.Square? neighborSquare))
+                {
+                    if (neighborSquare!.Piece == null || neighborSquare.Piece.Color != Color)
+                    {
+                        validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], neighborSquare));
+                    }
+                }
+            }
+        }
 
         return validMoves;
     }
