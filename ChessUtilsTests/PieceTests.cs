@@ -248,6 +248,37 @@ namespace ChessUtilsTests
                 }
             }
         }
+
+        [TestMethod]
+        public void TestCanMoveToDiagonalSquareIfOccupiedByEnemy()
+        {
+            // bishop sandwiched by other friendly pieces
+            Board.Square bishopSquare = board.BoardArr[3, 4]; // equivalent to E4
+
+            bishopSquare.Piece = new Bishop(bishopSquare.Location.Row, bishopSquare.Location.Col, Color.White);
+
+            int offset = 1;
+
+            List<Board.Square> enemyPawnSquares = new List<Board.Square>
+            {
+                board.BoardArr[bishopSquare.Location.Row - offset, 
+                    bishopSquare.Location.Col - offset],
+                board.BoardArr[bishopSquare.Location.Row - offset,
+                    bishopSquare.Location.Col + offset],
+                board.BoardArr[bishopSquare.Location.Row + offset,
+                    bishopSquare.Location.Col - offset],
+                board.BoardArr[bishopSquare.Location.Row + offset,
+                    bishopSquare.Location.Col + offset],
+
+            };
+            foreach(Board.Square enemyPawnSquare in enemyPawnSquares)
+            {
+                enemyPawnSquare.Piece = new Pawn(enemyPawnSquare.Location.Row, 
+                    enemyPawnSquare.Location.Col, Color.Black);
+                CustomCollectionAsserter.Contains(bishopSquare.Piece.GetValidMoves(board),
+                    new Move(bishopSquare, enemyPawnSquare));
+            }
+        }
     }
 
     [TestClass]
