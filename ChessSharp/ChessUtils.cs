@@ -139,7 +139,6 @@ public class Rook(int row, int col, Color color) : IPiece
     {
         List<Move> validMoves = new List<Move>();
 
-        // TODO look for en passant
         return validMoves;
     }
 
@@ -151,6 +150,110 @@ public class Rook(int row, int col, Color color) : IPiece
     public string getNotation()
     {
         return "R";
+    }
+}
+
+public class Bishop(int row, int col, Color color) : IPiece
+{
+    public PieceType Type => PieceType.Knight;
+
+    public Color Color => color;
+
+    Location IPiece.Location { get; set; } = new(row, col);
+
+    public IEnumerable<Move> GetValidMoves(Board board)
+    {
+        List<Move> validMoves = new List<Move>();
+
+        return validMoves;
+    }
+
+    public override string ToString()
+    {
+        return "B";
+    }
+
+    public string getNotation()
+    {
+        return "B";
+    }
+}
+
+public class Knight(int row, int col, Color color) : IPiece
+{
+    public PieceType Type => PieceType.Knight;
+
+    public Color Color => color;
+
+    Location IPiece.Location { get; set; } = new(row, col);
+
+    public IEnumerable<Move> GetValidMoves(Board board)
+    {
+        List<Move> validMoves = new List<Move>();
+
+        return validMoves;
+    }
+
+    public override string ToString()
+    {
+        return "N";
+    }
+
+    public string getNotation()
+    {
+        return "N";
+    }
+}
+
+public class Queen(int row, int col, Color color) : IPiece
+{
+    public PieceType Type => PieceType.Knight;
+
+    public Color Color => color;
+
+    Location IPiece.Location { get; set; } = new(row, col);
+
+    public IEnumerable<Move> GetValidMoves(Board board)
+    {
+        List<Move> validMoves = new List<Move>();
+
+        return validMoves;
+    }
+
+    public override string ToString()
+    {
+        return "Q";
+    }
+
+    public string getNotation()
+    {
+        return "Q";
+    }
+}
+
+public class King(int row, int col, Color color) : IPiece
+{
+    public PieceType Type => PieceType.Knight;
+
+    public Color Color => color;
+
+    Location IPiece.Location { get; set; } = new(row, col);
+
+    public IEnumerable<Move> GetValidMoves(Board board)
+    {
+        List<Move> validMoves = new List<Move>();
+
+        return validMoves;
+    }
+
+    public override string ToString()
+    {
+        return "K";
+    }
+
+    public string getNotation()
+    {
+        return "K";
     }
 }
 
