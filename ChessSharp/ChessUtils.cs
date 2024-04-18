@@ -139,6 +139,77 @@ public class Rook(int row, int col, Color color) : IPiece
     {
         List<Move> validMoves = new List<Move>();
 
+        Location myLoc = (this as IPiece).Location;
+        // check squares above the rook
+        for (int row = myLoc.Row + 1; row < 8; ++row)
+        {
+            Board.Square otherSquare = board.BoardArr[row, myLoc.Col];
+            if (otherSquare.Piece != null)
+            {
+                if (otherSquare.Piece.Color != Color)
+                {
+                    validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], otherSquare));
+                }
+                break;
+            } else
+            {
+                validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], otherSquare));
+            }
+        }
+        // check squares below the rook
+        for (int row = myLoc.Row - 1; row >= 0; --row)
+        {
+            Board.Square otherSquare = board.BoardArr[row, myLoc.Col];
+            if (otherSquare.Piece != null)
+            {
+                if (otherSquare.Piece.Color != Color)
+                {
+                    validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], otherSquare));
+                }
+                break;
+            }
+            else
+            {
+                validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], otherSquare));
+            }
+        }
+
+        // check squares to the left of the rook
+        for (int col = myLoc.Col - 1; col >= 0; --col)
+        {
+            Board.Square otherSquare = board.BoardArr[myLoc.Row, col];
+            if (otherSquare.Piece != null)
+            {
+                if (otherSquare.Piece.Color != Color)
+                {
+                    validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], otherSquare));
+                }
+                break;
+            }
+            else
+            {
+                validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], otherSquare));
+            }
+        }
+
+        // check squares to the right of the rook
+        for (int col = myLoc.Col + 1; col < 8; ++col)
+        {
+            Board.Square otherSquare = board.BoardArr[myLoc.Row, col];
+            if (otherSquare.Piece != null)
+            {
+                if (otherSquare.Piece.Color != Color)
+                {
+                    validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], otherSquare));
+                }
+                break;
+            }
+            else
+            {
+                validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], otherSquare));
+            }
+        }
+
         return validMoves;
     }
 

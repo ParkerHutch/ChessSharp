@@ -11,13 +11,36 @@ public static class CustomCollectionAsserter
     public static void DoesNotContain(IEnumerable<Move> actualMoves, Move moveInQuestion)
     {
 
-        CollectionAssert.Contains(actualMoves.ToList(), moveInQuestion, message: $"{moveInQuestion} should not be a valid move. Moves: [{string.Join(", ", actualMoves.ToList())}]");
+        CollectionAssert.DoesNotContain(actualMoves.ToList(), moveInQuestion, message: $"{moveInQuestion} should not be a valid move. Moves: [{string.Join(", ", actualMoves.ToList())}]");
     }
 }
 
 namespace ChessUtilsTests
 {
-    
+    [TestClass]
+    public class TestNoMovementMoves
+    {
+        [TestMethod]
+        public void TestNoMovementMovesForAllPieces()
+        {
+            Board board = new(true);
+            Board.Square pieceSquare = board.BoardArr[1, 1];
+            
+            pieceSquare.Piece = new Queen(1, 1, Color.White);
+            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board), new Move(pieceSquare, pieceSquare));
+            pieceSquare.Piece = new Rook(1, 1, Color.White);
+            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board), new Move(pieceSquare, pieceSquare));
+            pieceSquare.Piece = new Bishop(1, 1, Color.White);
+            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board), new Move(pieceSquare, pieceSquare));
+            pieceSquare.Piece = new Knight(1, 1, Color.White);
+            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board), new Move(pieceSquare, pieceSquare));
+            pieceSquare.Piece = new Pawn(1, 1, Color.White);
+            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board), new Move(pieceSquare, pieceSquare));
+            pieceSquare.Piece = new King(1, 1, Color.White);
+            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board), new Move(pieceSquare, pieceSquare));
+        }
+    }
+
     [TestClass]
     public class TestPawnMoves
     {
@@ -80,12 +103,8 @@ namespace ChessUtilsTests
 
             CustomCollectionAsserter.Contains(whitePawnSquare.Piece.GetValidMoves(board), whitePawnDiagonalMove1);
             CustomCollectionAsserter.Contains(whitePawnSquare.Piece.GetValidMoves(board), whitePawnDiagonalMove2);
-            //CollectionAssert.Contains(whitePawnSquare.Piece.GetValidMoves(board).ToList(), whitePawnDiagonalMove1, message: $"Moves present: {string.Join(',', whitePawnSquare.Piece.GetValidMoves(board).ToList())}");
-            //CollectionAssert.Contains(whitePawnSquare.Piece.GetValidMoves(board).ToList(), whitePawnDiagonalMove2, message: $"Moves present: {string.Join(',', whitePawnSquare.Piece.GetValidMoves(board).ToList())}");
             CustomCollectionAsserter.Contains(blackPawnSquare1.Piece.GetValidMoves(board), blackPawn1DiagonalMove);
             CustomCollectionAsserter.Contains(blackPawnSquare2.Piece.GetValidMoves(board), blackPawn2DiagonalMove);
-            //CollectionAssert.Contains(blackPawnSquare1.Piece.GetValidMoves(board).ToList(), blackPawn1DiagonalMove, message: $"Moves present: {string.Join(',', blackPawnSquare1.Piece.GetValidMoves(board).ToList())}");
-            //CollectionAssert.Contains(blackPawnSquare2.Piece.GetValidMoves(board).ToList(), blackPawn2DiagonalMove, message: $"Moves present: {string.Join(',', blackPawnSquare2.Piece.GetValidMoves(board).ToList())}");
         }
     }
 
@@ -98,16 +117,6 @@ namespace ChessUtilsTests
         public void setupBoard()
         {
             board = new(true);
-        }
-
-        [TestMethod]
-        public void TestNoMoveIsNotValidMove()
-        {
-            Board.Square rookSquare = board.BoardArr[4, 4];
-            rookSquare.Piece = new Rook(4, 4, Color.White);
-            Move invalidMove = new(rookSquare, rookSquare);
-            CustomCollectionAsserter.DoesNotContain(rookSquare.Piece.GetValidMoves(board), invalidMove);
-
         }
 
         [TestMethod]
@@ -139,11 +148,46 @@ namespace ChessUtilsTests
                 CustomCollectionAsserter.DoesNotContain(lowerRookSquare.Piece.GetValidMoves(board), invalidLowerRookMove);
             }
 
-            for (int row = lowerRow; lowerRow >= 0; --row)
+            for (int row = lowerRow; row >= 0; --row)
             {
                 Move invalidUpperRookMove = new(upperRookSquare, board.BoardArr[row, 0]);
                 CustomCollectionAsserter.DoesNotContain(upperRookSquare.Piece.GetValidMoves(board), invalidUpperRookMove);
             }
+        }
+
+        [TestMethod]
+        public void TestHorizontalMovesToUnoccupiedSquares()
+        {
+            Board.Square rookSquare = board.BoardArr[0, 4];
+
+            rookSquare.Piece = new Rook(0, 4, Color.White);
+            for (int col = 0; col < 8; ++col)
+            {
+                if (col == rookSquare.Location.Col)
+                {
+                    continue;
+                }
+                Move horizontalRookMove = new Move(rookSquare, board.BoardArr[rookSquare.Location.Row, col]);
+                CustomCollectionAsserter.Contains(rookSquare.Piece.GetValidMoves(board), horizontalRookMove);
+            }
+
+        }
+        [TestMethod]
+        public void TestVerticalMovesToUnoccupiedSquares()
+        {
+            Board.Square rookSquare = board.BoardArr[4, 0];
+
+            rookSquare.Piece = new Rook(4, 0, Color.White);
+            for (int row = 0; row < 8; ++row)
+            {
+                if (row == rookSquare.Location.Row)
+                {
+                    continue;
+                }
+                Move horizontalRookMove = new Move(rookSquare, board.BoardArr[row, rookSquare.Location.Col]);
+                CustomCollectionAsserter.Contains(rookSquare.Piece.GetValidMoves(board), horizontalRookMove);
+            }
+
         }
     }
 
