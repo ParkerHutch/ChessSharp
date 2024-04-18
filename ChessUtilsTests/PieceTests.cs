@@ -208,13 +208,14 @@ namespace ChessUtilsTests
             // bishop sandwiched by other friendly pieces
             Board.Square bishopSquare = board.BoardArr[3, 4]; // equivalent to E4
 
-            bishopSquare.Piece = new Bishop(3, 4, Color.White);
+            bishopSquare.Piece = new Bishop(bishopSquare.Location.Row, bishopSquare.Location.Col, Color.White);
 
-            board.BoardArr[6, 2].Piece = new Pawn(6, 2, Color.White);
-            board.BoardArr[6, 5].Piece = new Pawn(6, 5, Color.White);
+            int pawnRow = 5;
+            board.BoardArr[pawnRow, 2].Piece = new Pawn(pawnRow, 2, Color.White);
+            board.BoardArr[pawnRow, 6].Piece = new Pawn(pawnRow, 6, Color.White);
 
             // check the bottom-left to upper-right diagonal moves are valid
-            for (int row = 0; row < 3; ++row)
+            for (int row = 0; row < bishopSquare.Location.Row; ++row)
             {
                 Move lowerDiagonalLeftMove = new(bishopSquare, board.BoardArr[row, row + 1]);
                 Move lowerDiagonalRightMove = new(bishopSquare, board.BoardArr[row, 7 - row]);
@@ -222,23 +223,29 @@ namespace ChessUtilsTests
                 CustomCollectionAsserter.Contains(bishopSquare.Piece.GetValidMoves(board), lowerDiagonalRightMove);
             }
 
-            for (int row = 4; row < 6; ++ row)
+            for (int row = bishopSquare.Location.Row + 1; row < pawnRow; ++row)
             {
-                int squaresAboveBishopCount = 4 - row;
-                Move upperDiagonalLeftMove = new(bishopSquare, board.BoardArr[row, row - squaresAboveBishopCount]);
-                Move upperDiagonalRightMove = new(bishopSquare, board.BoardArr[row, row]);
+                int squaresAboveBishopCount = row - bishopSquare.Location.Row;
+                Move upperDiagonalLeftMove = new(bishopSquare, board.BoardArr[row, bishopSquare.Location.Col - squaresAboveBishopCount]);
+                Move upperDiagonalRightMove = new(bishopSquare, board.BoardArr[row, bishopSquare.Location.Col + squaresAboveBishopCount]);
                 CustomCollectionAsserter.Contains(bishopSquare.Piece.GetValidMoves(board), upperDiagonalLeftMove);
                 CustomCollectionAsserter.Contains(bishopSquare.Piece.GetValidMoves(board), upperDiagonalRightMove);
             }
 
             // check that moves on or after the pawns are not valid
-            for (int row = 6; row < 8; ++row)
+            for (int row = pawnRow; row < 8; ++row)
             {
-                int squaresAboveBishopCount = 4 - row;
-                Move upperDiagonalLeftMove = new(bishopSquare, board.BoardArr[row, row - squaresAboveBishopCount]);
-                Move upperDiagonalRightMove = new(bishopSquare, board.BoardArr[row, row]);
-                CustomCollectionAsserter.DoesNotContain(bishopSquare.Piece.GetValidMoves(board), upperDiagonalLeftMove);
-                CustomCollectionAsserter.DoesNotContain(bishopSquare.Piece.GetValidMoves(board), upperDiagonalRightMove);
+                int squaresAboveBishopCount = row - bishopSquare.Location.Row;
+                if (board.getSquareAt(row, bishopSquare.Location.Col - squaresAboveBishopCount, out Board.Square? northwestDiagonalSquare))
+                {
+                    Move invalidNorthwestMove = new(bishopSquare, northwestDiagonalSquare!);
+                    CustomCollectionAsserter.DoesNotContain(bishopSquare.Piece.GetValidMoves(board), invalidNorthwestMove);
+                }
+                if (board.getSquareAt(row, bishopSquare.Location.Col + squaresAboveBishopCount, out Board.Square? northeastDiagonalSquare))
+                {
+                    Move invalidNortheastMove = new(bishopSquare, northeastDiagonalSquare!);
+                    CustomCollectionAsserter.DoesNotContain(bishopSquare.Piece.GetValidMoves(board), invalidNortheastMove);
+                }
             }
         }
     }
