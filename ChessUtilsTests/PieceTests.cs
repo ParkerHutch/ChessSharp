@@ -293,19 +293,67 @@ namespace ChessUtilsTests
         }
 
         [TestMethod]
-        public void TestValidMoves()
+        public void TestCanMoveToEmptySquares()
         {
             Board.Square knightSquare = board.BoardArr[3, 4];
             knightSquare.Piece = new Knight(3, 4, Color.White);
             // (col, row) (flip these for checks below): (4, 3) -> (3, 1), (3, 5), (2, 2), (2, 4), (5, 1), (6, 2), (6, 4), (5, 3)
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[1, 3]));
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[3, 1]));
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[5, 3]));
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[3, 5]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[2, 6]));
             CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[2, 2]));
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[2, 4]));
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[6, 2]));
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[6, 4]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[4, 6]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[4, 2]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[1, 5]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[1, 3]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[5, 3]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[5, 5]));
+        }
+
+        [TestMethod]
+        public void TestCannotMoveToSquaresOccupiedByFriendlyPieces()
+        {
+            Board.Square knightSquare = board.BoardArr[3, 4];
+            knightSquare.Piece = new Knight(3, 4, Color.White);
+            List<(int friendlyPawnRow, int friendlyPawnCol)> friendlyPawnPositions = [
+                (2, 6),
+                (2, 2),
+                (4, 6),
+                (4, 2),
+                (1, 5),
+                (1, 3),
+                (5, 3),
+                (5, 5)
+            ];
+            foreach((int friendlyPawnRow, int friendlyPawnCol) in friendlyPawnPositions)
+            {
+                board.BoardArr[friendlyPawnRow, friendlyPawnCol].Piece = 
+                    new Pawn(friendlyPawnRow, friendlyPawnCol, Color.White);
+                CustomCollectionAsserter.DoesNotContain(knightSquare.Piece.GetValidMoves(board), 
+                    new Move(knightSquare, board.BoardArr[friendlyPawnRow, friendlyPawnCol]));
+            }
+        }
+
+        [TestMethod]
+        public void TestCanMoveToSquaresOccupiedByEnemyPieces()
+        {
+            Board.Square knightSquare = board.BoardArr[3, 4];
+            knightSquare.Piece = new Knight(3, 4, Color.White);
+            List<(int enemyPawnRow, int enemyPawnCol)> enemyPawnPositions = [
+                (2, 6),
+                (2, 2),
+                (4, 6),
+                (4, 2),
+                (1, 5),
+                (1, 3),
+                (5, 3),
+                (5, 5)
+            ];
+            foreach ((int enemyPawnRow, int enemyPawnCol) in enemyPawnPositions)
+            {
+                board.BoardArr[enemyPawnRow, enemyPawnCol].Piece =
+                    new Pawn(enemyPawnRow, enemyPawnCol, Color.Black);
+                CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board),
+                    new Move(knightSquare, board.BoardArr[enemyPawnRow, enemyPawnCol]));
+            }
         }
     }
 
