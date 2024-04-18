@@ -12,7 +12,12 @@
     <None Remove="Assets\DroidSansMono.ttf" />
     <None Remove="Assets\Empty.png" />
     <None Remove="Assets\icon.ico" />
+    <None Remove="Assets\king_light.png" />
     <None Remove="Assets\king_wikimedia_commons.png" />
+    <None Remove="Assets\knight_light.png" />
+    <None Remove="Assets\pawn_light.png" />
+    <None Remove="Assets\queen_light.png" />
+    <None Remove="Assets\rook_light.png" />
     <None Remove="Assets\solid_black_wikimedia_commons.png" />
     <None Remove="Assets\solid_white_wikimedia_commons.png" />
   </ItemGroup>
@@ -31,10 +36,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ChessSharp\ChessSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Assets\DroidSansMono.ttf" />
     <Resource Include="Assets\Empty.png" />
     <Resource Include="Assets\icon.ico" />
+    <Resource Include="Assets\king_light.png" />
     <Resource Include="Assets\king_wikimedia_commons.png" />
+    <Resource Include="Assets\knight_light.png" />
+    <Resource Include="Assets\pawn_light.png" />
+    <Resource Include="Assets\queen_light.png" />
+    <Resource Include="Assets\rook_light.png" />
     <Resource Include="Assets\solid_black_wikimedia_commons.png" />
     <Resource Include="Assets\solid_white_wikimedia_commons.png" />
   </ItemGroup>
