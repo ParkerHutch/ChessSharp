@@ -388,9 +388,76 @@ namespace ChessUtilsTests
         }
 
         [TestMethod]
-        public void TestValidMoves()
+        public void TestCanMoveToEmptySquares()
         {
-            Assert.IsTrue(false);
+            Board.Square kingSquare = board.BoardArr[3, 4];
+            kingSquare.Piece = new King(kingSquare.Location.Row, kingSquare.Location.Col, Color.White);
+
+            for (int row = kingSquare.Location.Row - 1; row <= kingSquare.Location.Row + 1; row++)
+            {
+                for (int col = kingSquare.Location.Col - 1; col <= kingSquare.Location.Col + 1; col++)
+                {
+                    if (row == kingSquare.Location.Row && col == kingSquare.Location.Col)
+                    {
+                        continue;
+                    }
+                    if (board.getSquareAt(row, col, out Board.Square? neighborSquare))
+                    {
+                        CustomCollectionAsserter.Contains
+                            (kingSquare.Piece.GetValidMoves(board),
+                            new Move(kingSquare, neighborSquare!));
+                    }
+                }
+            }
+        }
+        [TestMethod]
+        public void TestCanMoveToEnemyOccupiedSquares()
+        {
+            Board.Square kingSquare = board.BoardArr[3, 4];
+            kingSquare.Piece = new King(kingSquare.Location.Row, kingSquare.Location.Col, Color.White);
+
+            for (int row = kingSquare.Location.Row - 1; row <= kingSquare.Location.Row + 1; row++)
+            {
+                for (int col = kingSquare.Location.Col - 1; col <= kingSquare.Location.Col + 1; col++)
+                {
+                    if (row == kingSquare.Location.Row && col == kingSquare.Location.Col)
+                    {
+                        continue;
+                    }
+                    if (board.getSquareAt(row, col, out Board.Square? neighborSquare))
+                    {
+                        neighborSquare!.Piece = new Pawn(row, col, Color.Black);
+                        CustomCollectionAsserter.Contains
+                            (kingSquare.Piece.GetValidMoves(board),
+                            new Move(kingSquare, neighborSquare!));
+                    }
+                }
+            }
+        }
+
+        [TestMethod]
+        public void TestCannotMoveToFriendlyOccupiedSquares()
+        {
+            Board.Square kingSquare = board.BoardArr[3, 4];
+            kingSquare.Piece = new King(kingSquare.Location.Row, kingSquare.Location.Col, Color.White);
+
+            for (int row = kingSquare.Location.Row - 1; row <= kingSquare.Location.Row + 1; row++)
+            {
+                for (int col = kingSquare.Location.Col - 1; col <= kingSquare.Location.Col + 1; col++)
+                {
+                    if (row == kingSquare.Location.Row && col == kingSquare.Location.Col)
+                    {
+                        continue;
+                    }
+                    if (board.getSquareAt(row, col, out Board.Square? neighborSquare))
+                    {
+                        neighborSquare!.Piece = new Pawn(row, col, Color.White);
+                        CustomCollectionAsserter.DoesNotContain
+                            (kingSquare.Piece.GetValidMoves(board),
+                            new Move(kingSquare, neighborSquare!));
+                    }
+                }
+            }
         }
     }
 }
