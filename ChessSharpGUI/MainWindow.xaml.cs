@@ -12,6 +12,7 @@ using System.Windows.Shapes;
 //using System.Windows.Forms;
 
 using ChessSharp;
+using static ChessSharp.Board;
 
 namespace ChessSharpGUI
 {
@@ -20,14 +21,99 @@ namespace ChessSharpGUI
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly Dictionary<PieceType, ImageSource> pieceTypeToImage = new()
+        private class PieceKey : IEquatable<PieceKey>
         {
-            { PieceType.King, Images.King },
-            { PieceType.Queen, Images.Queen },
-            { PieceType.Rook, Images.Rook },
-            { PieceType.Bishop, Images.Bishop },
-            { PieceType.Pawn, Images.Pawn }
+            public PieceType Type { get; }
+
+            public ChessSharp.Color Color { get; }
+
+            public PieceKey(PieceType type, ChessSharp.Color color)
+            {
+                Type = type;
+                Color = color;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return Equals(obj as PieceKey);
+            }
+
+            public bool Equals(PieceKey other)
+            {
+                return other != null && Type == other.Type && Color == other.Color;
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hash = 17;
+                    hash = hash * 23 + Type.GetHashCode();
+                    hash = hash * 23 + Color.GetHashCode();
+                    return hash;
+                }
+            }
+        }
+
+        private readonly Dictionary<PieceType, Dictionary<ChessSharp.Color, ImageSource>> pieceTypeToImage = new()
+        {
+            {PieceType.King, new Dictionary<ChessSharp.Color, ImageSource>()
+                {
+                    { ChessSharp.Color.White, Images.King_Light },
+                    { ChessSharp.Color.Black, Images.King_Dark }
+                } 
+            },
+            {PieceType.Queen, new Dictionary<ChessSharp.Color, ImageSource>()
+                {
+                    { ChessSharp.Color.White, Images.Queen_Light },
+                    { ChessSharp.Color.Black, Images.Queen_Dark }
+                }
+            },
+            {PieceType.Rook, new Dictionary<ChessSharp.Color, ImageSource>()
+                {
+                    { ChessSharp.Color.White, Images.Rook_Light },
+                    { ChessSharp.Color.Black, Images.Rook_Dark }
+                }
+            },
+            {PieceType.Bishop, new Dictionary<ChessSharp.Color, ImageSource>()
+                {
+                    { ChessSharp.Color.White, Images.Bishop_Light },
+                    { ChessSharp.Color.Black, Images.Bishop_Dark }
+                }
+            },
+            {PieceType.Knight, new Dictionary<ChessSharp.Color, ImageSource>()
+                {
+                    { ChessSharp.Color.White, Images.Knight_Light },
+                    { ChessSharp.Color.Black, Images.Knight_Dark }
+                }
+            },
+            {PieceType.Pawn, new Dictionary<ChessSharp.Color, ImageSource>()
+                {
+                    { ChessSharp.Color.White, Images.Pawn_Light },
+                    { ChessSharp.Color.Black, Images.Pawn_Dark }
+                }
+            }
         };
+
+        //private readonly Dictionary<PieceKey, ImageSource> pieceTypeToImage = new()
+        //{
+        //    { new PieceKey(PieceType.King, ChessSharp.Color.White), Images.King },
+        //    { new PieceKey(PieceType.King, ChessSharp.Color.Black), Images.King },
+        //    { new PieceKey(PieceType.Pawn, ChessSharp.Color.White), Images.Pawn },
+        //    { new PieceKey(PieceType.Pawn, ChessSharp.Color.Black), Images.King },
+        //    { new PieceKey(PieceType.Queen, ChessSharp.Color.White), Images.Queen },
+        //    { new PieceKey(PieceType.Queen, ChessSharp.Color.Black), Images.Queen },
+        //    { new PieceKey(PieceType.Rook, ChessSharp.Color.White), Images.Rook },
+        //    { new PieceKey(PieceType.Rook, ChessSharp.Color.Black), Images.Rook },
+        //    { new PieceKey(PieceType.Bishop, ChessSharp.Color.White), Images.Bishop },
+        //    { new PieceKey(PieceType.Bishop, ChessSharp.Color.Black), Images.Bishop },
+        //    { new PieceKey(PieceType.Knight, ChessSharp.Color.White), Images.Knight },
+        //    { new PieceKey(PieceType.Knight, ChessSharp.Color.Black), Images.Knight },
+        //    { PieceType.Queen, Images.Queen },
+        //    { PieceType.Rook, Images.Rook },
+        //    { PieceType.Bishop, Images.Bishop },
+        //    { PieceType.Pawn, Images.Pawn }
+        //};
 
         private readonly int rows = 8, cols = 8;
         private readonly Image[,] pieceImages;
@@ -140,9 +226,60 @@ namespace ChessSharpGUI
             DebugTextBox.Text = $"Key clicked: {e.Key}";
         }
 
+        private Board.Square? getBoardSquareFromMouseClickPosition(Point mouseClickPoint)
+        {
+            double squareWidth = GameGrid.ActualWidth / 8;
+            double squareHeight = GameGrid.ActualHeight / 8;
+            int rowIndex = (int)(mouseClickPoint.Y / squareWidth);
+            int colIndex = (int)(mouseClickPoint.X / squareHeight);
+
+            if (board.GetSquareAt(rowIndex, colIndex, out Board.Square? square))
+            {
+                return square;
+            }
+            return null;
+        }
+
+        private void ClearAllMoveOverlays()
+        {
+            for (int r = 0; r < rows; r++)
+            {
+                for (int c = 0; c < cols; c++)
+                {
+                    if (board.BoardArr[r, c].Piece != null)
+                    {
+                        IPiece piece = board.BoardArr[r, c].Piece!;
+                        pieceImages[r, c].Source = pieceTypeToImage[piece.Type][piece.Color];
+                    }
+                    else
+                    {
+                        pieceImages[r, c].Source = gridImages[r, c].Source;
+                    }
+                }
+            }
+        }
+        private void HighlightValidMovesForPiece(IPiece piece)
+        {
+            ClearAllMoveOverlays();
+            foreach (Move move in piece.GetValidMoves(board))
+            {
+                pieceImages[move.NextSquare.Location.Row, move.NextSquare.Location.Col].Source = Images.MoveOverlay;
+            }
+        }
         private void Window_MouseDown(object sender, MouseEventArgs e)
         {
-            DebugTextBox.Text = $"Mouse clicked: {(e.GetPosition(GameGrid))}";
+            Point mouseClickPoint = e.GetPosition(GameGrid);
+            Board.Square? square = getBoardSquareFromMouseClickPosition(mouseClickPoint);
+            if (square != null && square.Piece != null)
+            {
+                DebugTextBox.Text = $"Square clicked: {(square.Location.Row, square.Location.Col)}";
+                HighlightValidMovesForPiece(square.Piece);
+                //foreach (Move move in square.Piece.GetValidMoves(board))
+                //{
+                //    pieceImages[move.NextSquare.Location.Row, move.NextSquare.Location.Col].Source = Images.MoveOverlay;
+                //}
+                //pieceImages[square.Location.Row, square.Location.Col].Source = Images.MoveOverlay;
+            }
         }
 
         private void Draw()
@@ -157,8 +294,8 @@ namespace ChessSharpGUI
                 {
                     if (board.BoardArr[r, c].Piece != null)
                     {
-                        PieceType pieceType = board.BoardArr[r, c].Piece!.Type;
-                        pieceImages[r, c].Source = pieceTypeToImage[pieceType];
+                        IPiece piece = board.BoardArr[r, c].Piece!;
+                        pieceImages[r, c].Source = pieceTypeToImage[piece.Type][piece.Color];
                     } else
                     {
                         pieceImages[r, c].Source = gridImages[r, c].Source;

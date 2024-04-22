@@ -23,8 +23,8 @@ public enum PieceType
 
 public class Move(Square lastSquare, Square nextSquare)
 {
-	Square LastSquare = lastSquare;
-	Square NextSquare = nextSquare;
+	public readonly Square LastSquare = lastSquare;
+	public readonly Square NextSquare = nextSquare;
 	public override string ToString()
 	{
 		return $"{LastSquare.Piece} ({LastSquare.Location.Row}, {LastSquare.Location.Col}) to "
@@ -48,6 +48,10 @@ public class Move(Square lastSquare, Square nextSquare)
 		return false;
     }
 
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(LastSquare, NextSquare);
+    }
 }
 
 public interface IPiece // use abstract base class?
@@ -247,7 +251,7 @@ public class Bishop(int row, int col, Color color) : IPiece
             // candidates are (row + sqA, col + sqA), (row + sqA, col - sqA), (row - sqA, col - sqA), (row - sqA, col + sqA)
             // stop searching a diagonal once it's blocked by a piece
             if (!northwestDiagonalBlocked && 
-                board.getSquareAt(
+                board.GetSquareAt(
                     myLoc.Row + squaresAwayFromBishop, 
                     myLoc.Col - squaresAwayFromBishop, 
                     out Board.Square? northwestSquare
@@ -269,7 +273,7 @@ public class Bishop(int row, int col, Color color) : IPiece
             }
 
             if (!northeastDiagonalBlocked &&
-                board.getSquareAt(
+                board.GetSquareAt(
                     myLoc.Row + squaresAwayFromBishop,
                     myLoc.Col + squaresAwayFromBishop,
                     out Board.Square? northeastSquare
@@ -291,7 +295,7 @@ public class Bishop(int row, int col, Color color) : IPiece
             }
 
             if (!southwestDiagonalBlocked &&
-                board.getSquareAt(
+                board.GetSquareAt(
                     myLoc.Row - squaresAwayFromBishop,
                     myLoc.Col - squaresAwayFromBishop,
                     out Board.Square? southwestSquare
@@ -313,7 +317,7 @@ public class Bishop(int row, int col, Color color) : IPiece
             }
 
             if (!southeastDiagonalBlocked &&
-                board.getSquareAt(
+                board.GetSquareAt(
                     myLoc.Row - squaresAwayFromBishop,
                     myLoc.Col + squaresAwayFromBishop,
                     out Board.Square? southeastSquare
@@ -376,7 +380,7 @@ public class Knight(int row, int col, Color color) : IPiece
 
         foreach((int moveRow, int moveCol) in possibleMovePositions)
         {
-            if (board.getSquareAt(moveRow, moveCol, out Square? moveSquare))
+            if (board.GetSquareAt(moveRow, moveCol, out Square? moveSquare))
             {
                 if (moveSquare!.Piece == null || moveSquare!.Piece.Color != Color) {
                     validMoves.Add(new Move(board.BoardArr[myLoc.Row, myLoc.Col], moveSquare));
@@ -420,7 +424,7 @@ public class Queen(int row, int col, Color color) : IPiece
             // candidates are (row + sqA, col + sqA), (row + sqA, col - sqA), (row - sqA, col - sqA), (row - sqA, col + sqA)
             // stop searching a diagonal once it's blocked by a piece
             if (!northwestDiagonalBlocked &&
-                board.getSquareAt(
+                board.GetSquareAt(
                     myLoc.Row + squaresAwayFromBishop,
                     myLoc.Col - squaresAwayFromBishop,
                     out Board.Square? northwestSquare
@@ -442,7 +446,7 @@ public class Queen(int row, int col, Color color) : IPiece
             }
 
             if (!northeastDiagonalBlocked &&
-                board.getSquareAt(
+                board.GetSquareAt(
                     myLoc.Row + squaresAwayFromBishop,
                     myLoc.Col + squaresAwayFromBishop,
                     out Board.Square? northeastSquare
@@ -464,7 +468,7 @@ public class Queen(int row, int col, Color color) : IPiece
             }
 
             if (!southwestDiagonalBlocked &&
-                board.getSquareAt(
+                board.GetSquareAt(
                     myLoc.Row - squaresAwayFromBishop,
                     myLoc.Col - squaresAwayFromBishop,
                     out Board.Square? southwestSquare
@@ -486,7 +490,7 @@ public class Queen(int row, int col, Color color) : IPiece
             }
 
             if (!southeastDiagonalBlocked &&
-                board.getSquareAt(
+                board.GetSquareAt(
                     myLoc.Row - squaresAwayFromBishop,
                     myLoc.Col + squaresAwayFromBishop,
                     out Board.Square? southeastSquare
@@ -601,7 +605,7 @@ public class Queen(int row, int col, Color color) : IPiece
                 {
                     continue;
                 }
-                if (board.getSquareAt(row, col, out Board.Square? neighborSquare))
+                if (board.GetSquareAt(row, col, out Board.Square? neighborSquare))
                 {
                     if (neighborSquare!.Piece == null || neighborSquare.Piece.Color != Color)
                     {
@@ -657,7 +661,7 @@ public class King(int row, int col, Color color) : IPiece
                 {
                     continue;
                 }
-                if (board.getSquareAt(row, col, out Board.Square? neighborSquare))
+                if (board.GetSquareAt(row, col, out Board.Square? neighborSquare))
                 {
                     if (neighborSquare!.Piece == null || neighborSquare.Piece.Color != Color)
                     {
@@ -686,7 +690,7 @@ public class King(int row, int col, Color color) : IPiece
 public class Board
 {
     // Return true and store the square at (row, col) if that position is in the bounds of the board
-    public bool getSquareAt(int row, int col, out Square? square)
+    public bool GetSquareAt(int row, int col, out Square? square)
     {
         if (row >= 0 && row < 8 && col >= 0 && col < 8)
         {
