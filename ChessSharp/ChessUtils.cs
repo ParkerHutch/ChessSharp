@@ -764,6 +764,59 @@ public class Board
         CurrentTurn = moveColor == Color.White ? Color.Black : Color.White;
     }
 
+    public List<IPiece> GetUncapturedPieces(Color color)
+    {
+        List<IPiece> pieces = new();
+        for (int row = 0; row < 8; row++)
+        {
+            for (int col = 0; col < 8; col++)
+            {
+                if (BoardArr[row, col].Piece?.Color == color)
+                {
+                    pieces.Add(BoardArr[row, col].Piece!);
+                }
+            }
+        }
+        return pieces;
+    }
+    public Move? GetRandomMoveForColor(Color color)
+    {
+        // start a search from a random square for a piece belonging to the player color, then return a random move for that piece
+        Random rnd = new();
+        List<IPiece> pieces = GetUncapturedPieces(color);
+        if (pieces.Count > 0) {
+            int randomIndex = rnd.Next(pieces.Count());
+
+            // find the first index of a piece that has some valid moves
+            int pieceWithMovesIndex = Enumerable.Range(randomIndex, pieces.Count - randomIndex)
+                              .Concat(Enumerable.Range(0, randomIndex))
+                              .FirstOrDefault(i => pieces[i].GetValidMoves(this).Any());
+
+            if (pieceWithMovesIndex >= 0)
+            {
+                int randomMoveIndex = rnd.Next(pieces[pieceWithMovesIndex].GetValidMoves(this).Count());
+                return pieces[pieceWithMovesIndex].GetValidMoves(this).ElementAt(randomMoveIndex);
+            }
+            //do // search for a piece
+            //{
+            //    var validMoves = pieces.ElementAt(pieceIndex).GetValidMoves(this);
+            //    if (validMoves.Any()) // search for a move
+            //    {
+                    
+            //    } else
+            //    {
+            //        pieceIndex++;
+            //        if (pieceIndex == pieces.Count())
+            //        {
+            //            pieceIndex = 0; // wrap around
+            //        }
+            //    }
+            //} while (pieceIndex != randomIndex);
+        }
+
+        return null;
+    }
+
 	public void Print()
 	{
 		string topRowNumbers = "\t" + string.Join("\t", Enumerable.Range(1, 8));

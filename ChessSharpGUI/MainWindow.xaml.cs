@@ -21,39 +21,6 @@ namespace ChessSharpGUI
     /// </summary>
     public partial class MainWindow : Window
     {
-        private class PieceKey : IEquatable<PieceKey>
-        {
-            public PieceType Type { get; }
-
-            public ChessSharp.Color Color { get; }
-
-            public PieceKey(PieceType type, ChessSharp.Color color)
-            {
-                Type = type;
-                Color = color;
-            }
-
-            public override bool Equals(object obj)
-            {
-                return Equals(obj as PieceKey);
-            }
-
-            public bool Equals(PieceKey other)
-            {
-                return other != null && Type == other.Type && Color == other.Color;
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    int hash = 17;
-                    hash = hash * 23 + Type.GetHashCode();
-                    hash = hash * 23 + Color.GetHashCode();
-                    return hash;
-                }
-            }
-        }
 
         private readonly Dictionary<PieceType, Dictionary<ChessSharp.Color, ImageSource>> pieceTypeToImage = new()
         {
@@ -95,30 +62,11 @@ namespace ChessSharpGUI
             }
         };
 
-        //private readonly Dictionary<PieceKey, ImageSource> pieceTypeToImage = new()
-        //{
-        //    { new PieceKey(PieceType.King, ChessSharp.Color.White), Images.King },
-        //    { new PieceKey(PieceType.King, ChessSharp.Color.Black), Images.King },
-        //    { new PieceKey(PieceType.Pawn, ChessSharp.Color.White), Images.Pawn },
-        //    { new PieceKey(PieceType.Pawn, ChessSharp.Color.Black), Images.King },
-        //    { new PieceKey(PieceType.Queen, ChessSharp.Color.White), Images.Queen },
-        //    { new PieceKey(PieceType.Queen, ChessSharp.Color.Black), Images.Queen },
-        //    { new PieceKey(PieceType.Rook, ChessSharp.Color.White), Images.Rook },
-        //    { new PieceKey(PieceType.Rook, ChessSharp.Color.Black), Images.Rook },
-        //    { new PieceKey(PieceType.Bishop, ChessSharp.Color.White), Images.Bishop },
-        //    { new PieceKey(PieceType.Bishop, ChessSharp.Color.Black), Images.Bishop },
-        //    { new PieceKey(PieceType.Knight, ChessSharp.Color.White), Images.Knight },
-        //    { new PieceKey(PieceType.Knight, ChessSharp.Color.Black), Images.Knight },
-        //    { PieceType.Queen, Images.Queen },
-        //    { PieceType.Rook, Images.Rook },
-        //    { PieceType.Bishop, Images.Bishop },
-        //    { PieceType.Pawn, Images.Pawn }
-        //};
-
         private readonly int rows = 8, cols = 8;
         private readonly Image[,] pieceImages;
         private readonly Image[,] gridImages;
         private Board board;
+        private IPiece? selectedPiece = null;
 
         public MainWindow()
         {
@@ -224,6 +172,14 @@ namespace ChessSharpGUI
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             DebugTextBox.Text = $"Key clicked: {e.Key}";
+            if (e.Key == Key.Space)
+            {
+                Move? randomMove = board.GetRandomMoveForColor(ChessSharp.Color.Black);
+                if (randomMove != null) {
+                    board.ExecuteMove(randomMove);
+                    Draw();
+                }
+            }
         }
 
         private Board.Square? getBoardSquareFromMouseClickPosition(Point mouseClickPoint)
@@ -270,15 +226,35 @@ namespace ChessSharpGUI
         {
             Point mouseClickPoint = e.GetPosition(GameGrid);
             Board.Square? square = getBoardSquareFromMouseClickPosition(mouseClickPoint);
-            if (square != null && square.Piece != null)
+            if (square != null && selectedPiece != null)
+            {
+                Move? move = selectedPiece.GetValidMoves(board).FirstOrDefault(x => x.NextSquare == square);
+                DebugTextBox.Text = $"Moves: {string.Join(", ", selectedPiece.GetValidMoves(board))}";
+                if (move != null)
+                {
+                    // move the piece
+                    DebugTextBox.Text = $"Can do this move: {move}";
+                    board.ExecuteMove(move);
+                    selectedPiece = null;
+                    DrawGrid();
+                } else
+                {
+                    DebugTextBox.Text = $"Can't move there!";
+                    if (square.Piece != null && square.Piece.Color == board.CurrentTurn)
+                    {
+                        // same logic as the outside else for the grandparent if here
+                        selectedPiece = square.Piece;
+                        HighlightValidMovesForPiece(square.Piece);
+                        //this.InvalidateVisual();
+                    }
+                }
+            }
+            else if (square != null && square.Piece != null && square.Piece.Color == board.CurrentTurn)
             {
                 DebugTextBox.Text = $"Square clicked: {(square.Location.Row, square.Location.Col)}";
+                selectedPiece = square.Piece;
+                DebugTextBox.Text = $"Moves: {string.Join(", ", selectedPiece.GetValidMoves(board))}";
                 HighlightValidMovesForPiece(square.Piece);
-                //foreach (Move move in square.Piece.GetValidMoves(board))
-                //{
-                //    pieceImages[move.NextSquare.Location.Row, move.NextSquare.Location.Col].Source = Images.MoveOverlay;
-                //}
-                //pieceImages[square.Location.Row, square.Location.Col].Source = Images.MoveOverlay;
             }
         }
 
