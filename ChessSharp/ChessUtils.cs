@@ -92,9 +92,9 @@ public class Pawn(int row, int col, Color color) : IPiece
         // check if the pawn can move diagonally
 		if (myLoc.Col + 1 < board.BoardArr.GetLength(1))
 		{
-            IPiece? pieceDiagonalLeft = board.BoardArr[
+            IPiece? pieceDiagonalRight = board.BoardArr[
             myLoc.Row + directionOffset, myLoc.Col + 1].Piece;
-			if (pieceDiagonalLeft != null)
+			if (pieceDiagonalRight != null && pieceDiagonalRight.Color != Color)
 			{
 				validMoves.Add(new Move(
 					board.BoardArr[myLoc.Row, myLoc.Col],
@@ -107,7 +107,7 @@ public class Pawn(int row, int col, Color color) : IPiece
         {
             IPiece? pieceDiagonalLeft = board.BoardArr[
             myLoc.Row + directionOffset, myLoc.Col - 1].Piece;
-            if (pieceDiagonalLeft != null)
+            if (pieceDiagonalLeft != null && pieceDiagonalLeft.Color != Color)
             {
                 validMoves.Add(new Move(
                     board.BoardArr[myLoc.Row, myLoc.Col],
@@ -689,6 +689,7 @@ public class King(int row, int col, Color color) : IPiece
 
 public class Board
 {
+    public Color CurrentTurn { get; set; } = Color.White;
     // Return true and store the square at (row, col) if that position is in the bounds of the board
     public bool GetSquareAt(int row, int col, out Square? square)
     {
@@ -743,13 +744,24 @@ public class Board
 
             for (int col = 0; col < 8; ++col)
             {
-                BoardArr[6, col].Piece = new Pawn(1, col, Color.Black);
+                BoardArr[6, col].Piece = new Pawn(6, col, Color.Black);
             }
         }
     }
 	public Board(bool empty)
 	{
        SetBoard(empty);
+    }
+
+    public void ExecuteMove(Move move)
+    {
+        // Assumption: the move is valid
+
+        Color moveColor = move.LastSquare.Piece.Color;
+        move.NextSquare.Piece = move.LastSquare.Piece;
+        move.LastSquare.Piece = null;
+        move.NextSquare.Piece.Location = move.NextSquare.Location;
+        CurrentTurn = moveColor == Color.White ? Color.Black : Color.White;
     }
 
 	public void Print()
