@@ -21,6 +21,7 @@ namespace ChessSharpGUI
         public readonly static ImageSource Pawn_Dark = LoadImage("pawn_dark.png");
         public readonly static ImageSource Black = LoadImage("solid_black_wikimedia_commons.png");
         public readonly static ImageSource White = LoadImage("solid_white_wikimedia_commons.png");
+        public readonly static ImageSource Green = LoadImage("green.png");
         public readonly static ImageSource MoveOverlay = LoadImage("pink_circle.png");
         private static ImageSource LoadImage(string filename)
         {

@@ -59,7 +59,7 @@ public interface IPiece // use abstract base class?
     Location Location { get; set; }
     PieceType Type { get; }
 	public Color Color { get; }
-    public IEnumerable<Move> GetValidMoves(Board board);
+    public IEnumerable<Move> GetValidMoves(Board board, bool ensureNoCheckOnFriendlyKing);
 
 	//public override string ToString; // need to use an abstract base class: https://stackoverflow.com/questions/510341/force-subclasses-of-an-interface-to-implement-tostring
 	public string getNotation();
@@ -73,7 +73,7 @@ public class Pawn(int row, int col, Color color) : IPiece
 
 	Location IPiece.Location { get; set; } = new(row, col);
 
-	public IEnumerable<Move> GetValidMoves(Board board)
+	public IEnumerable<Move> GetValidMoves(Board board, bool ensureNoCheckOnFriendlyKing)
 	{
 		List<Move> validMoves = new List<Move>();
 		int directionOffset = color == Color.White ? 1 : -1;
@@ -115,7 +115,10 @@ public class Pawn(int row, int col, Color color) : IPiece
                 ));
             }
         }
-
+        
+        if (ensureNoCheckOnFriendlyKing) { 
+            validMoves = validMoves.Where(x => board.MoveDoesNotResultInCheckOnOwnKing(x)).ToList();
+        }
         // TODO look for en passant
         return validMoves;
 	}
@@ -139,7 +142,7 @@ public class Rook(int row, int col, Color color) : IPiece
 
     Location IPiece.Location { get; set; } = new(row, col);
 
-    public IEnumerable<Move> GetValidMoves(Board board)
+    public IEnumerable<Move> GetValidMoves(Board board, bool ensureNoCheckOnFriendlyKing)
     {
         List<Move> validMoves = new List<Move>();
 
@@ -214,6 +217,10 @@ public class Rook(int row, int col, Color color) : IPiece
             }
         }
 
+        if (ensureNoCheckOnFriendlyKing) { 
+            validMoves = validMoves.Where(x => board.MoveDoesNotResultInCheckOnOwnKing(x)).ToList();
+        }
+
         return validMoves;
     }
 
@@ -230,13 +237,13 @@ public class Rook(int row, int col, Color color) : IPiece
 
 public class Bishop(int row, int col, Color color) : IPiece
 {
-    public PieceType Type => PieceType.Knight;
+    public PieceType Type => PieceType.Bishop;
 
     public Color Color => color;
 
     Location IPiece.Location { get; set; } = new(row, col);
 
-    public IEnumerable<Move> GetValidMoves(Board board)
+    public IEnumerable<Move> GetValidMoves(Board board, bool ensureNoCheckOnFriendlyKing)
     {
         List<Move> validMoves = new List<Move>();
 
@@ -340,6 +347,10 @@ public class Bishop(int row, int col, Color color) : IPiece
 
         }
 
+        if (ensureNoCheckOnFriendlyKing)
+        {
+            validMoves = validMoves.Where(x => board.MoveDoesNotResultInCheckOnOwnKing(x)).ToList();
+        }
         return validMoves;
     }
 
@@ -362,7 +373,7 @@ public class Knight(int row, int col, Color color) : IPiece
 
     Location IPiece.Location { get; set; } = new(row, col);
 
-    public IEnumerable<Move> GetValidMoves(Board board)
+    public IEnumerable<Move> GetValidMoves(Board board, bool ensureNoCheckOnFriendlyKing)
     {
         List<Move> validMoves = new List<Move>();
         Location myLoc = (this as IPiece).Location;
@@ -388,6 +399,11 @@ public class Knight(int row, int col, Color color) : IPiece
             }
         }
 
+        if (ensureNoCheckOnFriendlyKing)
+        {
+            validMoves = validMoves.Where(x => board.MoveDoesNotResultInCheckOnOwnKing(x)).ToList();
+        }
+
         return validMoves;
     }
 
@@ -404,7 +420,7 @@ public class Knight(int row, int col, Color color) : IPiece
 
 public class Queen(int row, int col, Color color) : IPiece
 {
-    public PieceType Type => PieceType.Knight;
+    public PieceType Type => PieceType.Queen;
 
     public Color Color => color;
 
@@ -619,12 +635,17 @@ public class Queen(int row, int col, Color color) : IPiece
         return validMoves;
     }
 
-    public IEnumerable<Move> GetValidMoves(Board board)
+    public IEnumerable<Move> GetValidMoves(Board board, bool ensureNoCheckOnFriendlyKing)
     {
         List<Move> validMoves = 
             GetDiagonalMoves(board).ToList()
             .Concat(GetRowAndColumnMoves(board)).ToList()
             .Concat(GetNeighboringSquareMoves(board)).ToList();
+
+        if (ensureNoCheckOnFriendlyKing)
+        {
+            validMoves = validMoves.Where(x => board.MoveDoesNotResultInCheckOnOwnKing(x)).ToList();
+        }
 
         return validMoves;
     }
@@ -642,13 +663,13 @@ public class Queen(int row, int col, Color color) : IPiece
 
 public class King(int row, int col, Color color) : IPiece
 {
-    public PieceType Type => PieceType.Knight;
+    public PieceType Type => PieceType.King;
 
     public Color Color => color;
 
     Location IPiece.Location { get; set; } = new(row, col);
 
-    public IEnumerable<Move> GetValidMoves(Board board)
+    public IEnumerable<Move> GetValidMoves(Board board, bool ensureNoCheckOnFriendlyKing)
     {
         List<Move> validMoves = new List<Move>();
         Location myLoc = (this as IPiece).Location;
@@ -671,6 +692,11 @@ public class King(int row, int col, Color color) : IPiece
                     }
                 }
             }
+        }
+
+        if (ensureNoCheckOnFriendlyKing)
+        {
+            validMoves = validMoves.Where(x => board.MoveDoesNotResultInCheckOnOwnKing(x)).ToList();
         }
 
         return validMoves;
@@ -731,10 +757,22 @@ public class Board
 
 		if (!empty)
 		{
-			// place rooks
 			BoardArr[0, 0].Piece = new Rook(0, 0, Color.White);
+            BoardArr[0, 1].Piece = new Knight(0, 1, Color.White);
+            BoardArr[0, 2].Piece = new Bishop(0, 2, Color.White);
+            BoardArr[0, 3].Piece = new King(0, 3, Color.White);
+            BoardArr[0, 4].Piece = new Queen(0, 4, Color.White);
+            BoardArr[0, 5].Piece = new Bishop(0, 5, Color.White);
+            BoardArr[0, 6].Piece = new Knight(0, 6, Color.White);
             BoardArr[0, 7].Piece = new Rook(0, 7, Color.White);
+
             BoardArr[7, 0].Piece = new Rook(7, 0, Color.Black);
+            BoardArr[7, 1].Piece = new Knight(7, 1, Color.Black);
+            BoardArr[7, 2].Piece = new Bishop(7, 2, Color.Black);
+            BoardArr[7, 3].Piece = new King(7, 3, Color.Black);
+            BoardArr[7, 4].Piece = new Queen(7, 4, Color.Black);
+            BoardArr[7, 5].Piece = new Bishop(7, 5, Color.Black);
+            BoardArr[7, 6].Piece = new Knight(7, 6, Color.Black);
             BoardArr[7, 7].Piece = new Rook(7, 7, Color.Black);
             // place pawns
             for (int col = 0; col < 8; ++col)
@@ -751,6 +789,51 @@ public class Board
 	public Board(bool empty)
 	{
        SetBoard(empty);
+    }
+
+    public bool IsKingInCheck(Color kingColor)
+    {
+        for (int row = 0; row < 8; row++)
+        {
+            for (int col = 0; col < 8; col++)
+            {
+                IPiece? piece = BoardArr[row, col].Piece;
+                if (piece != null)
+                {
+                    if (piece.Color != kingColor)
+                    {
+                        var nextSquares = piece.GetValidMoves(this, false).Select(x => x.NextSquare);
+                        if (nextSquares.Any(x => x.Piece != null && x.Piece.Type == PieceType.King && x.Piece.Color == kingColor))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    public bool MoveDoesNotResultInCheckOnOwnKing(Move move)
+    {
+        // ideas: 
+        // 1. actually make the move and 
+        Color movingPieceColor = move.LastSquare.Piece!.Color;
+        bool result;
+        // 1. Store the pieces that were previously at the move's lastSquare and nextSquare squares
+        IPiece oldLastSquarePiece = move.LastSquare.Piece!;
+        IPiece? oldNextSquarePiece = move.NextSquare.Piece;
+        // 2. Make the move, but don't alternate the turn
+        move.NextSquare.Piece = move.LastSquare.Piece;
+        move.LastSquare.Piece = null;
+        // 3. Check if any piece has a check on the moving piece's king
+        result = !IsKingInCheck(movingPieceColor);
+
+        // 4. Revert the move by using the storage from 1
+        move.LastSquare.Piece = oldLastSquarePiece;
+        move.NextSquare.Piece = oldNextSquarePiece;
+
+        // 5. Return true if the result for 3 is empty, false otherwise
+        return result;
     }
 
     public void ExecuteMove(Move move)
@@ -790,12 +873,12 @@ public class Board
             // find the first index of a piece that has some valid moves
             int pieceWithMovesIndex = Enumerable.Range(randomIndex, pieces.Count - randomIndex)
                               .Concat(Enumerable.Range(0, randomIndex))
-                              .FirstOrDefault(i => pieces[i].GetValidMoves(this).Any());
+                              .FirstOrDefault(i => pieces[i].GetValidMoves(this, true).Any());
 
             if (pieceWithMovesIndex >= 0)
             {
-                int randomMoveIndex = rnd.Next(pieces[pieceWithMovesIndex].GetValidMoves(this).Count());
-                return pieces[pieceWithMovesIndex].GetValidMoves(this).ElementAt(randomMoveIndex);
+                int randomMoveIndex = rnd.Next(pieces[pieceWithMovesIndex].GetValidMoves(this, true).Count());
+                return pieces[pieceWithMovesIndex].GetValidMoves(this, true).ElementAt(randomMoveIndex);
             }
             //do // search for a piece
             //{

@@ -90,7 +90,7 @@ namespace ChessSharpGUI
 
                     Image image = new Image
                     {
-                        Source = (r + c) % 2 == 0 ? Images.Black : Images.White
+                        Source = (r + c) % 2 == 0 ? Images.Green : Images.White
                     };
 
                     images[r, c] = image;
@@ -113,7 +113,7 @@ namespace ChessSharpGUI
                 {
                     Image image = new Image
                     {
-                        Source = (r + c) % 2 == 0 ? Images.Black : Images.White
+                        Source = (r + c) % 2 == 0 ? Images.Green : Images.White
                     };
 
                     images[r, c] = image;
@@ -217,7 +217,7 @@ namespace ChessSharpGUI
         private void HighlightValidMovesForPiece(IPiece piece)
         {
             ClearAllMoveOverlays();
-            foreach (Move move in piece.GetValidMoves(board))
+            foreach (Move move in piece.GetValidMoves(board, true))
             {
                 pieceImages[move.NextSquare.Location.Row, move.NextSquare.Location.Col].Source = Images.MoveOverlay;
             }
@@ -228,8 +228,8 @@ namespace ChessSharpGUI
             Board.Square? square = getBoardSquareFromMouseClickPosition(mouseClickPoint);
             if (square != null && selectedPiece != null)
             {
-                Move? move = selectedPiece.GetValidMoves(board).FirstOrDefault(x => x.NextSquare == square);
-                DebugTextBox.Text = $"Moves: {string.Join(", ", selectedPiece.GetValidMoves(board))}";
+                Move? move = selectedPiece.GetValidMoves(board, true).FirstOrDefault(x => x.NextSquare == square);
+                DebugTextBox.Text = $"Moves: {string.Join(", ", selectedPiece.GetValidMoves(board, true))}";
                 if (move != null)
                 {
                     // move the piece
@@ -253,7 +253,7 @@ namespace ChessSharpGUI
             {
                 DebugTextBox.Text = $"Square clicked: {(square.Location.Row, square.Location.Col)}";
                 selectedPiece = square.Piece;
-                DebugTextBox.Text = $"Moves: {string.Join(", ", selectedPiece.GetValidMoves(board))}";
+                DebugTextBox.Text = $"Moves: {string.Join(", ", selectedPiece.GetValidMoves(board, true))}";
                 HighlightValidMovesForPiece(square.Piece);
             }
         }

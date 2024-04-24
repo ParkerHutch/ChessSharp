@@ -18,6 +18,53 @@ public static class CustomCollectionAsserter
 namespace ChessUtilsTests
 {
     [TestClass]
+    public class TestChecks
+    {
+        [TestMethod]
+        public void TestKingInDirectCheckFromRook()
+        {
+            Board board = new(true);
+            Board.Square kingSquare = board.BoardArr[1, 1];
+            kingSquare.Piece = new King(kingSquare.Location.Row, kingSquare.Location.Col, Color.White);
+
+            Board.Square rookSquare = board.BoardArr[kingSquare.Location.Row + 3, kingSquare.Location.Col];
+            rookSquare.Piece = new Rook(rookSquare.Location.Row, rookSquare.Location.Col, Color.Black);
+
+            Assert.IsTrue(board.IsKingInCheck(Color.White));
+        }
+
+        [TestMethod]
+        public void TestKingIsNotInCheck()
+        {
+            Board board = new(true);
+            Board.Square kingSquare = board.BoardArr[1, 1];
+            kingSquare.Piece = new King(kingSquare.Location.Row, kingSquare.Location.Col, Color.White);
+
+            Board.Square rookSquare = board.BoardArr[kingSquare.Location.Row + 3, kingSquare.Location.Col + 1];
+            rookSquare.Piece = new Rook(rookSquare.Location.Row, rookSquare.Location.Col, Color.Black);
+
+            Assert.IsFalse(board.IsKingInCheck(Color.White));
+        }
+
+        [TestMethod]
+        public void TestMovingKingIntoRookPathResultsInCheck()
+        {
+            Board board = new(true);
+            Board.Square kingSquare = board.BoardArr[1, 1];
+            kingSquare.Piece = new King(kingSquare.Location.Row, kingSquare.Location.Col, Color.White);
+
+            Board.Square rookSquare = board.BoardArr[kingSquare.Location.Row + 3, kingSquare.Location.Col + 1];
+            rookSquare.Piece = new Rook(rookSquare.Location.Row, rookSquare.Location.Col, Color.Black);
+
+            Move kingMoveIntoCheck = new Move(kingSquare, board.BoardArr[kingSquare.Location.Row, rookSquare.Location.Col]);
+            Assert.IsFalse(board.MoveDoesNotResultInCheckOnOwnKing(kingMoveIntoCheck));
+
+            // make sure the king hasn't moved from its original spot
+            Assert.IsTrue(kingSquare.Piece != null && kingSquare.Piece.Type == PieceType.King);
+        }
+    }
+
+    [TestClass]
     public class TestNoMovementMoves
     {
         [TestMethod]
@@ -27,17 +74,17 @@ namespace ChessUtilsTests
             Board.Square pieceSquare = board.BoardArr[1, 1];
             
             pieceSquare.Piece = new Queen(1, 1, Color.White);
-            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board), new Move(pieceSquare, pieceSquare));
+            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board, false), new Move(pieceSquare, pieceSquare));
             pieceSquare.Piece = new Rook(1, 1, Color.White);
-            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board), new Move(pieceSquare, pieceSquare));
+            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board, false), new Move(pieceSquare, pieceSquare));
             pieceSquare.Piece = new Bishop(1, 1, Color.White);
-            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board), new Move(pieceSquare, pieceSquare));
+            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board, false), new Move(pieceSquare, pieceSquare));
             pieceSquare.Piece = new Knight(1, 1, Color.White);
-            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board), new Move(pieceSquare, pieceSquare));
+            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board, false), new Move(pieceSquare, pieceSquare));
             pieceSquare.Piece = new Pawn(1, 1, Color.White);
-            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board), new Move(pieceSquare, pieceSquare));
+            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board, false), new Move(pieceSquare, pieceSquare));
             pieceSquare.Piece = new King(1, 1, Color.White);
-            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board), new Move(pieceSquare, pieceSquare));
+            CustomCollectionAsserter.DoesNotContain(pieceSquare.Piece.GetValidMoves(board, false), new Move(pieceSquare, pieceSquare));
         }
     }
 
@@ -61,7 +108,7 @@ namespace ChessUtilsTests
                 currSquare.Piece = new Pawn(2, col, Color.White);
                 Board.Square expectedMoveSquare = board.BoardArr[3, col];
                 Move expectedMove = new(currSquare, expectedMoveSquare);
-                CollectionAssert.Contains(currSquare.Piece.GetValidMoves(board).ToList(), expectedMove);
+                CollectionAssert.Contains(currSquare.Piece.GetValidMoves(board, false).ToList(), expectedMove);
             }
         }
 
@@ -80,8 +127,8 @@ namespace ChessUtilsTests
             Move invalidWhitePawnMove = new(whitePawnSquare, blackPawnSquare);
             Move invalidBlackPawnMove = new(blackPawnSquare, whitePawnSquare);
 
-            CollectionAssert.DoesNotContain(whitePawnSquare.Piece.GetValidMoves(board).ToList(), invalidWhitePawnMove);
-            CollectionAssert.DoesNotContain(blackPawnSquare.Piece.GetValidMoves(board).ToList(), invalidBlackPawnMove);
+            CollectionAssert.DoesNotContain(whitePawnSquare.Piece.GetValidMoves(board, false).ToList(), invalidWhitePawnMove);
+            CollectionAssert.DoesNotContain(blackPawnSquare.Piece.GetValidMoves(board, false).ToList(), invalidBlackPawnMove);
         }
 
         [TestMethod]
@@ -101,10 +148,10 @@ namespace ChessUtilsTests
             Move blackPawn1DiagonalMove = new(blackPawnSquare1, whitePawnSquare);
             Move blackPawn2DiagonalMove = new(blackPawnSquare2, whitePawnSquare);
 
-            CustomCollectionAsserter.Contains(whitePawnSquare.Piece.GetValidMoves(board), whitePawnDiagonalMove1);
-            CustomCollectionAsserter.Contains(whitePawnSquare.Piece.GetValidMoves(board), whitePawnDiagonalMove2);
-            CustomCollectionAsserter.Contains(blackPawnSquare1.Piece.GetValidMoves(board), blackPawn1DiagonalMove);
-            CustomCollectionAsserter.Contains(blackPawnSquare2.Piece.GetValidMoves(board), blackPawn2DiagonalMove);
+            CustomCollectionAsserter.Contains(whitePawnSquare.Piece.GetValidMoves(board, false), whitePawnDiagonalMove1);
+            CustomCollectionAsserter.Contains(whitePawnSquare.Piece.GetValidMoves(board, false), whitePawnDiagonalMove2);
+            CustomCollectionAsserter.Contains(blackPawnSquare1.Piece.GetValidMoves(board, false), blackPawn1DiagonalMove);
+            CustomCollectionAsserter.Contains(blackPawnSquare2.Piece.GetValidMoves(board, false), blackPawn2DiagonalMove);
         }
 
         [TestMethod]
@@ -113,12 +160,12 @@ namespace ChessUtilsTests
             Board.Square whitePawnSquare = board.BoardArr[6, 4];
             whitePawnSquare.Piece = new Pawn(6, 4, Color.White);
             Board.Square whitePawnMoveSquare = board.BoardArr[7, 4];
-            CustomCollectionAsserter.Contains(whitePawnSquare.Piece.GetValidMoves(board), new Move(whitePawnSquare, whitePawnMoveSquare));
+            CustomCollectionAsserter.Contains(whitePawnSquare.Piece.GetValidMoves(board, false), new Move(whitePawnSquare, whitePawnMoveSquare));
 
             Board.Square blackPawnSquare = board.BoardArr[1, 5];
             whitePawnSquare.Piece = new Pawn(1, 5, Color.Black);
             Board.Square blackPawnMoveSquare = board.BoardArr[0, 5];
-            CustomCollectionAsserter.Contains(whitePawnSquare.Piece.GetValidMoves(board), new Move(blackPawnSquare, blackPawnMoveSquare));
+            CustomCollectionAsserter.Contains(whitePawnSquare.Piece.GetValidMoves(board, false), new Move(blackPawnSquare, blackPawnMoveSquare));
 
         }
 
@@ -132,7 +179,7 @@ namespace ChessUtilsTests
                 Board.Square aheadPawnSquare = board.BoardArr[backWhitePawnSquare.Location.Row + 1, col];
                 aheadPawnSquare.Piece = new Pawn(backWhitePawnSquare.Location.Row + 1, col, Color.White);
                 Move invalidBackPawnMove = new(backWhitePawnSquare, aheadPawnSquare);
-                CustomCollectionAsserter.DoesNotContain(backWhitePawnSquare.Piece.GetValidMoves(board), invalidBackPawnMove);
+                CustomCollectionAsserter.DoesNotContain(backWhitePawnSquare.Piece.GetValidMoves(board, false), invalidBackPawnMove);
             }
         }
     }
@@ -164,23 +211,23 @@ namespace ChessUtilsTests
             {
                 Move lowerRookMove = new(lowerRookSquare, board.BoardArr[row, 0]);
 
-                CustomCollectionAsserter.Contains(lowerRookSquare.Piece.GetValidMoves(board), lowerRookMove);
+                CustomCollectionAsserter.Contains(lowerRookSquare.Piece.GetValidMoves(board, false), lowerRookMove);
 
                 Move upperRookMove = new(upperRookSquare, board.BoardArr[row, 0]);
-                CustomCollectionAsserter.Contains(upperRookSquare.Piece.GetValidMoves(board), upperRookMove);
+                CustomCollectionAsserter.Contains(upperRookSquare.Piece.GetValidMoves(board, false), upperRookMove);
             }
 
             // verify that rooks can't move on top of or past each other
             for (int row = upperRow; row < 8; ++row)
             {
                 Move invalidLowerRookMove = new(lowerRookSquare, board.BoardArr[row, 0]);
-                CustomCollectionAsserter.DoesNotContain(lowerRookSquare.Piece.GetValidMoves(board), invalidLowerRookMove);
+                CustomCollectionAsserter.DoesNotContain(lowerRookSquare.Piece.GetValidMoves(board, false), invalidLowerRookMove);
             }
 
             for (int row = lowerRow; row >= 0; --row)
             {
                 Move invalidUpperRookMove = new(upperRookSquare, board.BoardArr[row, 0]);
-                CustomCollectionAsserter.DoesNotContain(upperRookSquare.Piece.GetValidMoves(board), invalidUpperRookMove);
+                CustomCollectionAsserter.DoesNotContain(upperRookSquare.Piece.GetValidMoves(board, false), invalidUpperRookMove);
             }
         }
 
@@ -197,7 +244,7 @@ namespace ChessUtilsTests
                     continue;
                 }
                 Move horizontalRookMove = new Move(rookSquare, board.BoardArr[rookSquare.Location.Row, col]);
-                CustomCollectionAsserter.Contains(rookSquare.Piece.GetValidMoves(board), horizontalRookMove);
+                CustomCollectionAsserter.Contains(rookSquare.Piece.GetValidMoves(board, false), horizontalRookMove);
             }
 
         }
@@ -214,7 +261,7 @@ namespace ChessUtilsTests
                     continue;
                 }
                 Move horizontalRookMove = new Move(rookSquare, board.BoardArr[row, rookSquare.Location.Col]);
-                CustomCollectionAsserter.Contains(rookSquare.Piece.GetValidMoves(board), horizontalRookMove);
+                CustomCollectionAsserter.Contains(rookSquare.Piece.GetValidMoves(board, false), horizontalRookMove);
             }
 
         }
@@ -248,8 +295,8 @@ namespace ChessUtilsTests
             {
                 Move lowerDiagonalLeftMove = new(bishopSquare, board.BoardArr[row, row + 1]);
                 Move lowerDiagonalRightMove = new(bishopSquare, board.BoardArr[row, 7 - row]);
-                CustomCollectionAsserter.Contains(bishopSquare.Piece.GetValidMoves(board), lowerDiagonalLeftMove);
-                CustomCollectionAsserter.Contains(bishopSquare.Piece.GetValidMoves(board), lowerDiagonalRightMove);
+                CustomCollectionAsserter.Contains(bishopSquare.Piece.GetValidMoves(board, false), lowerDiagonalLeftMove);
+                CustomCollectionAsserter.Contains(bishopSquare.Piece.GetValidMoves(board, false), lowerDiagonalRightMove);
             }
 
             for (int row = bishopSquare.Location.Row + 1; row < pawnRow; ++row)
@@ -257,8 +304,8 @@ namespace ChessUtilsTests
                 int squaresAboveBishopCount = row - bishopSquare.Location.Row;
                 Move upperDiagonalLeftMove = new(bishopSquare, board.BoardArr[row, bishopSquare.Location.Col - squaresAboveBishopCount]);
                 Move upperDiagonalRightMove = new(bishopSquare, board.BoardArr[row, bishopSquare.Location.Col + squaresAboveBishopCount]);
-                CustomCollectionAsserter.Contains(bishopSquare.Piece.GetValidMoves(board), upperDiagonalLeftMove);
-                CustomCollectionAsserter.Contains(bishopSquare.Piece.GetValidMoves(board), upperDiagonalRightMove);
+                CustomCollectionAsserter.Contains(bishopSquare.Piece.GetValidMoves(board, false), upperDiagonalLeftMove);
+                CustomCollectionAsserter.Contains(bishopSquare.Piece.GetValidMoves(board, false), upperDiagonalRightMove);
             }
 
             // check that moves on or after the pawns are not valid
@@ -268,12 +315,12 @@ namespace ChessUtilsTests
                 if (board.GetSquareAt(row, bishopSquare.Location.Col - squaresAboveBishopCount, out Board.Square? northwestDiagonalSquare))
                 {
                     Move invalidNorthwestMove = new(bishopSquare, northwestDiagonalSquare!);
-                    CustomCollectionAsserter.DoesNotContain(bishopSquare.Piece.GetValidMoves(board), invalidNorthwestMove);
+                    CustomCollectionAsserter.DoesNotContain(bishopSquare.Piece.GetValidMoves(board, false), invalidNorthwestMove);
                 }
                 if (board.GetSquareAt(row, bishopSquare.Location.Col + squaresAboveBishopCount, out Board.Square? northeastDiagonalSquare))
                 {
                     Move invalidNortheastMove = new(bishopSquare, northeastDiagonalSquare!);
-                    CustomCollectionAsserter.DoesNotContain(bishopSquare.Piece.GetValidMoves(board), invalidNortheastMove);
+                    CustomCollectionAsserter.DoesNotContain(bishopSquare.Piece.GetValidMoves(board, false), invalidNortheastMove);
                 }
             }
         }
@@ -304,7 +351,7 @@ namespace ChessUtilsTests
             {
                 enemyPawnSquare.Piece = new Pawn(enemyPawnSquare.Location.Row, 
                     enemyPawnSquare.Location.Col, Color.Black);
-                CustomCollectionAsserter.Contains(bishopSquare.Piece.GetValidMoves(board),
+                CustomCollectionAsserter.Contains(bishopSquare.Piece.GetValidMoves(board, false),
                     new Move(bishopSquare, enemyPawnSquare));
             }
         }
@@ -327,14 +374,14 @@ namespace ChessUtilsTests
             Board.Square knightSquare = board.BoardArr[3, 4];
             knightSquare.Piece = new Knight(3, 4, Color.White);
             // (col, row) (flip these for checks below): (4, 3) -> (3, 1), (3, 5), (2, 2), (2, 4), (5, 1), (6, 2), (6, 4), (5, 3)
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[2, 6]));
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[2, 2]));
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[4, 6]));
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[4, 2]));
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[1, 5]));
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[1, 3]));
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[5, 3]));
-            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board), new Move(knightSquare, board.BoardArr[5, 5]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board, false), new Move(knightSquare, board.BoardArr[2, 6]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board, false), new Move(knightSquare, board.BoardArr[2, 2]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board, false), new Move(knightSquare, board.BoardArr[4, 6]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board, false), new Move(knightSquare, board.BoardArr[4, 2]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board, false), new Move(knightSquare, board.BoardArr[1, 5]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board, false), new Move(knightSquare, board.BoardArr[1, 3]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board, false), new Move(knightSquare, board.BoardArr[5, 3]));
+            CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board, false), new Move(knightSquare, board.BoardArr[5, 5]));
         }
 
         [TestMethod]
@@ -356,7 +403,7 @@ namespace ChessUtilsTests
             {
                 board.BoardArr[friendlyPawnRow, friendlyPawnCol].Piece = 
                     new Pawn(friendlyPawnRow, friendlyPawnCol, Color.White);
-                CustomCollectionAsserter.DoesNotContain(knightSquare.Piece.GetValidMoves(board), 
+                CustomCollectionAsserter.DoesNotContain(knightSquare.Piece.GetValidMoves(board, false), 
                     new Move(knightSquare, board.BoardArr[friendlyPawnRow, friendlyPawnCol]));
             }
         }
@@ -380,7 +427,7 @@ namespace ChessUtilsTests
             {
                 board.BoardArr[enemyPawnRow, enemyPawnCol].Piece =
                     new Pawn(enemyPawnRow, enemyPawnCol, Color.Black);
-                CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board),
+                CustomCollectionAsserter.Contains(knightSquare.Piece.GetValidMoves(board, false),
                     new Move(knightSquare, board.BoardArr[enemyPawnRow, enemyPawnCol]));
             }
         }
@@ -425,7 +472,7 @@ namespace ChessUtilsTests
                         if (board.GetSquareAt(row, col, out Board.Square? neighborSquare))
                         {
                             CustomCollectionAsserter.Contains
-                                (queenSquare.Piece.GetValidMoves(board),
+                                (queenSquare.Piece.GetValidMoves(board, false),
                                 new Move(queenSquare, neighborSquare!));
                         }
                     }
@@ -449,7 +496,7 @@ namespace ChessUtilsTests
                         {
                             neighborSquare!.Piece = new Pawn(row, col, Color.Black);
                             CustomCollectionAsserter.Contains
-                                (queenSquare.Piece.GetValidMoves(board),
+                                (queenSquare.Piece.GetValidMoves(board, false),
                                 new Move(queenSquare, neighborSquare!));
                         }
                     }
@@ -474,7 +521,7 @@ namespace ChessUtilsTests
                         {
                             neighborSquare!.Piece = new Pawn(row, col, Color.White);
                             CustomCollectionAsserter.DoesNotContain
-                                (queenSquare.Piece.GetValidMoves(board),
+                                (queenSquare.Piece.GetValidMoves(board, false),
                                 new Move(queenSquare, neighborSquare!));
                         }
                     }
@@ -509,23 +556,23 @@ namespace ChessUtilsTests
                 {
                     Move lowerQueenMove = new(lowerQueenSquare, board.BoardArr[row, 0]);
 
-                    CustomCollectionAsserter.Contains(lowerQueenSquare.Piece.GetValidMoves(board), lowerQueenMove);
+                    CustomCollectionAsserter.Contains(lowerQueenSquare.Piece.GetValidMoves(board, false), lowerQueenMove);
 
                     Move upperQueenMove = new(upperQueenSquare, board.BoardArr[row, 0]);
-                    CustomCollectionAsserter.Contains(upperQueenSquare.Piece.GetValidMoves(board), upperQueenMove);
+                    CustomCollectionAsserter.Contains(upperQueenSquare.Piece.GetValidMoves(board, false), upperQueenMove);
                 }
 
                 // verify that Queens can't move on top of or past each other
                 for (int row = upperRow; row < 8; ++row)
                 {
                     Move invalidLowerQueenMove = new(lowerQueenSquare, board.BoardArr[row, 0]);
-                    CustomCollectionAsserter.DoesNotContain(lowerQueenSquare.Piece.GetValidMoves(board), invalidLowerQueenMove);
+                    CustomCollectionAsserter.DoesNotContain(lowerQueenSquare.Piece.GetValidMoves(board, false), invalidLowerQueenMove);
                 }
 
                 for (int row = lowerRow; row >= 0; --row)
                 {
                     Move invalidUpperQueenMove = new(upperQueenSquare, board.BoardArr[row, 0]);
-                    CustomCollectionAsserter.DoesNotContain(upperQueenSquare.Piece.GetValidMoves(board), invalidUpperQueenMove);
+                    CustomCollectionAsserter.DoesNotContain(upperQueenSquare.Piece.GetValidMoves(board, false), invalidUpperQueenMove);
                 }
             }
 
@@ -542,7 +589,7 @@ namespace ChessUtilsTests
                         continue;
                     }
                     Move horizontalQueenMove = new Move(queenSquare, board.BoardArr[queenSquare.Location.Row, col]);
-                    CustomCollectionAsserter.Contains(queenSquare.Piece.GetValidMoves(board), horizontalQueenMove);
+                    CustomCollectionAsserter.Contains(queenSquare.Piece.GetValidMoves(board, false), horizontalQueenMove);
                 }
 
             }
@@ -559,7 +606,7 @@ namespace ChessUtilsTests
                         continue;
                     }
                     Move horizontalQueenMove = new Move(queenSquare, board.BoardArr[row, queenSquare.Location.Col]);
-                    CustomCollectionAsserter.Contains(queenSquare.Piece.GetValidMoves(board), horizontalQueenMove);
+                    CustomCollectionAsserter.Contains(queenSquare.Piece.GetValidMoves(board, false), horizontalQueenMove);
                 }
 
             }
@@ -593,8 +640,8 @@ namespace ChessUtilsTests
                 {
                     Move lowerDiagonalLeftMove = new(queenSquare, board.BoardArr[row, row + 1]);
                     Move lowerDiagonalRightMove = new(queenSquare, board.BoardArr[row, 7 - row]);
-                    CustomCollectionAsserter.Contains(queenSquare.Piece.GetValidMoves(board), lowerDiagonalLeftMove);
-                    CustomCollectionAsserter.Contains(queenSquare.Piece.GetValidMoves(board), lowerDiagonalRightMove);
+                    CustomCollectionAsserter.Contains(queenSquare.Piece.GetValidMoves(board, false), lowerDiagonalLeftMove);
+                    CustomCollectionAsserter.Contains(queenSquare.Piece.GetValidMoves(board, false), lowerDiagonalRightMove);
                 }
 
                 for (int row = queenSquare.Location.Row + 1; row < pawnRow; ++row)
@@ -602,8 +649,8 @@ namespace ChessUtilsTests
                     int squaresAboveBishopCount = row - queenSquare.Location.Row;
                     Move upperDiagonalLeftMove = new(queenSquare, board.BoardArr[row, queenSquare.Location.Col - squaresAboveBishopCount]);
                     Move upperDiagonalRightMove = new(queenSquare, board.BoardArr[row, queenSquare.Location.Col + squaresAboveBishopCount]);
-                    CustomCollectionAsserter.Contains(queenSquare.Piece.GetValidMoves(board), upperDiagonalLeftMove);
-                    CustomCollectionAsserter.Contains(queenSquare.Piece.GetValidMoves(board), upperDiagonalRightMove);
+                    CustomCollectionAsserter.Contains(queenSquare.Piece.GetValidMoves(board, false), upperDiagonalLeftMove);
+                    CustomCollectionAsserter.Contains(queenSquare.Piece.GetValidMoves(board, false), upperDiagonalRightMove);
                 }
 
                 // check that moves on or after the pawns are not valid
@@ -613,12 +660,12 @@ namespace ChessUtilsTests
                     if (board.GetSquareAt(row, queenSquare.Location.Col - squaresAboveBishopCount, out Board.Square? northwestDiagonalSquare))
                     {
                         Move invalidNorthwestMove = new(queenSquare, northwestDiagonalSquare!);
-                        CustomCollectionAsserter.DoesNotContain(queenSquare.Piece.GetValidMoves(board), invalidNorthwestMove);
+                        CustomCollectionAsserter.DoesNotContain(queenSquare.Piece.GetValidMoves(board, false), invalidNorthwestMove);
                     }
                     if (board.GetSquareAt(row, queenSquare.Location.Col + squaresAboveBishopCount, out Board.Square? northeastDiagonalSquare))
                     {
                         Move invalidNortheastMove = new(queenSquare, northeastDiagonalSquare!);
-                        CustomCollectionAsserter.DoesNotContain(queenSquare.Piece.GetValidMoves(board), invalidNortheastMove);
+                        CustomCollectionAsserter.DoesNotContain(queenSquare.Piece.GetValidMoves(board, false), invalidNortheastMove);
                     }
                 }
             }
@@ -649,7 +696,7 @@ namespace ChessUtilsTests
                 {
                     enemyPawnSquare.Piece = new Pawn(enemyPawnSquare.Location.Row,
                         enemyPawnSquare.Location.Col, Color.Black);
-                    CustomCollectionAsserter.Contains(queenSquare.Piece.GetValidMoves(board),
+                    CustomCollectionAsserter.Contains(queenSquare.Piece.GetValidMoves(board, false),
                         new Move(queenSquare, enemyPawnSquare));
                 }
             }
@@ -686,7 +733,7 @@ namespace ChessUtilsTests
                     if (board.GetSquareAt(row, col, out Board.Square? neighborSquare))
                     {
                         CustomCollectionAsserter.Contains
-                            (kingSquare.Piece.GetValidMoves(board),
+                            (kingSquare.Piece.GetValidMoves(board, false),
                             new Move(kingSquare, neighborSquare!));
                     }
                 }
@@ -710,7 +757,7 @@ namespace ChessUtilsTests
                     {
                         neighborSquare!.Piece = new Pawn(row, col, Color.Black);
                         CustomCollectionAsserter.Contains
-                            (kingSquare.Piece.GetValidMoves(board),
+                            (kingSquare.Piece.GetValidMoves(board, false),
                             new Move(kingSquare, neighborSquare!));
                     }
                 }
@@ -735,7 +782,7 @@ namespace ChessUtilsTests
                     {
                         neighborSquare!.Piece = new Pawn(row, col, Color.White);
                         CustomCollectionAsserter.DoesNotContain
-                            (kingSquare.Piece.GetValidMoves(board),
+                            (kingSquare.Piece.GetValidMoves(board, false),
                             new Move(kingSquare, neighborSquare!));
                     }
                 }
