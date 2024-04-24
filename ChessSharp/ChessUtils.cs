@@ -87,7 +87,20 @@ public class Pawn(int row, int col, Color color) : IPiece
 				board.BoardArr[myLoc.Row, myLoc.Col],
 				board.BoardArr[myLoc.Row + directionOffset, myLoc.Col]
 			));
-		}
+            bool hasNotMovedOffStartingRow = (color == Color.White && myLoc.Row == 1) || (color == Color.Black && myLoc.Row == 6);
+            if (hasNotMovedOffStartingRow)
+            {
+                IPiece? pieceTwoRowsAhead = board.BoardArr[
+                        myLoc.Row + directionOffset * 2, myLoc.Col].Piece;
+                if (pieceTwoRowsAhead == null)
+                {
+                    validMoves.Add(new Move(
+                        board.BoardArr[myLoc.Row, myLoc.Col],
+                        board.BoardArr[myLoc.Row + directionOffset * 2, myLoc.Col]
+                    ));
+                }
+            }
+        }
 
         // check if the pawn can move diagonally
 		if (myLoc.Col + 1 < board.BoardArr.GetLength(1))

@@ -104,11 +104,14 @@ namespace ChessUtilsTests
         {
             for (int col = 0; col < 8; ++col)
             {
-                Board.Square currSquare = board.BoardArr[2, col];
-                currSquare.Piece = new Pawn(2, col, Color.White);
-                Board.Square expectedMoveSquare = board.BoardArr[3, col];
-                Move expectedMove = new(currSquare, expectedMoveSquare);
-                CollectionAssert.Contains(currSquare.Piece.GetValidMoves(board, false).ToList(), expectedMove);
+                Board.Square currSquare = board.BoardArr[1, col];
+                currSquare.Piece = new Pawn(1, col, Color.White);
+                Board.Square expectedMoveSquare1 = board.BoardArr[2, col];
+                Board.Square expectedMoveSquare2 = board.BoardArr[3, col];
+                Move expectedMove1 = new(currSquare, expectedMoveSquare1);
+                Move expectedMove2 = new(currSquare, expectedMoveSquare2);
+                CustomCollectionAsserter.Contains(currSquare.Piece.GetValidMoves(board, false).ToList(), expectedMove1);
+                CustomCollectionAsserter.Contains(currSquare.Piece.GetValidMoves(board, false).ToList(), expectedMove2);
             }
         }
 
@@ -160,6 +163,7 @@ namespace ChessUtilsTests
             Board.Square whitePawnSquare = board.BoardArr[6, 4];
             whitePawnSquare.Piece = new Pawn(6, 4, Color.White);
             Board.Square whitePawnMoveSquare = board.BoardArr[7, 4];
+            Console.WriteLine(whitePawnSquare.Piece.GetValidMoves(board, false));
             CustomCollectionAsserter.Contains(whitePawnSquare.Piece.GetValidMoves(board, false), new Move(whitePawnSquare, whitePawnMoveSquare));
 
             Board.Square blackPawnSquare = board.BoardArr[1, 5];
