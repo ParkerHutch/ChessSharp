@@ -174,9 +174,10 @@ namespace ChessSharpGUI
         //    }
         //}
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Draw();
+            await GameLoop();
             //AdornerLayer.GetAdornerLayer(GameGrid).Add(new FourBoxes(GameGrid));
         }
         private void Window_KeyDown(object sender, KeyEventArgs e)
@@ -291,13 +292,49 @@ namespace ChessSharpGUI
                     if (board.BoardArr[r, c].Piece != null)
                     {
                         IPiece piece = board.BoardArr[r, c].Piece!;
-                        pieceImages[r, c].Source = pieceTypeToImage[piece.Type][piece.Color];
+                        if (piece.Type == PieceType.King && board.IsKingInCheck(piece.Color))
+                        {
+                            pieceImages[r, c].Source = pieceTypeToCapturableImage[PieceType.King];
+                        } else
+                        {
+                            pieceImages[r, c].Source = pieceTypeToImage[piece.Type][piece.Color];
+                        }
                     } else
                     {
                         pieceImages[r, c].Source = gridImages[r, c].Source;
                     }
                 }
             }
+        }
+
+        private async Task GameLoop()
+        {
+            while (true) // TODO should be board.gameOver or something
+            {
+                await Task.Delay(100);
+                if (board.CurrentTurn == ChessSharp.Color.Black)
+                {
+                    DebugTextBox.Text = $"Black to move";
+                    Move? randomMove = board.GetRandomMoveForColor(ChessSharp.Color.Black);
+                    if (randomMove != null)
+                    {
+                        board.ExecuteMove(randomMove);
+                        Draw();
+                    }
+                    else
+                    {
+                        if (board.IsKingInCheck(ChessSharp.Color.Black))
+                        {
+                            DebugTextBox.Text = "Black is in checkmate, White wins";
+                        } else
+                        {
+                            DebugTextBox.Text = "Stalemate";
+                        }
+                    }
+                }
+                //Draw();
+            }
+            
         }
 
 

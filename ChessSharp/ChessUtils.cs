@@ -34,7 +34,7 @@ public class Move(Square lastSquare, Square nextSquare)
 
     public override bool Equals(object? obj)
     {
-		var otherMove = obj as Move;
+        var otherMove = obj as Move;
 		if (otherMove == null)
 		{
 			return false;
