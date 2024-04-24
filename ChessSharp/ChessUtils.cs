@@ -866,36 +866,52 @@ public class Board
 
     public bool MoveDoesNotResultInCheckOnOwnKing(Move move)
     {
-        // ideas: 
-        // 1. actually make the move and 
-        Color movingPieceColor = move.LastSquare.Piece!.Color;
-        bool result;
         // 1. Store the pieces that were previously at the move's lastSquare and nextSquare squares
         IPiece oldLastSquarePiece = move.LastSquare.Piece!;
         IPiece? oldNextSquarePiece = move.NextSquare.Piece;
-        // 2. Make the move, but don't alternate the turn
-        move.NextSquare.Piece = move.LastSquare.Piece;
-        move.LastSquare.Piece = null;
+        Color movingPieceColor = oldLastSquarePiece.Color;
+        // 2. Simulate the move without actually alternating the turn
+        ExecuteMove(move, alternateTurn: false);
         // 3. Check if any piece has a check on the moving piece's king
-        result = !IsKingInCheck(movingPieceColor);
+        bool result = !IsKingInCheck(movingPieceColor);
 
         // 4. Revert the move by using the storage from 1
         move.LastSquare.Piece = oldLastSquarePiece;
-        move.NextSquare.Piece = oldNextSquarePiece;
+        oldLastSquarePiece.Location = move.LastSquare.Location;
 
-        // 5. Return true if the result for 3 is empty, false otherwise
+        move.NextSquare.Piece = oldNextSquarePiece;
+        if (oldNextSquarePiece != null)
+        {
+            oldNextSquarePiece.Location = move.NextSquare.Location;
+        }
+
+        // 5. Return true if the result for step 3 is empty, false otherwise
         return result;
     }
 
-    public void ExecuteMove(Move move)
+    public void ExecuteMove(Move move, bool alternateTurn = true)
     {
-        // Assumption: the move is valid
-
-        Color moveColor = move.LastSquare.Piece.Color;
-        move.NextSquare.Piece = move.LastSquare.Piece;
+        // Assumption: the move is valid and LastSquare.Piece is not null
+        Color moveColor = move.LastSquare.Piece!.Color;
+        bool moveIsPawnPromotion =
+            (
+                (moveColor == Color.White && move.NextSquare.Location.Row == 7) ||
+                (moveColor == Color.Black && move.NextSquare.Location.Row == 0)
+            ) && move.LastSquare.Piece!.Type == PieceType.Pawn;
+        
+        if (moveIsPawnPromotion)
+        {
+            move.NextSquare.Piece = new Queen(move.NextSquare.Location.Row, move.NextSquare.Location.Col, moveColor);
+        } else
+        {
+            move.NextSquare.Piece = move.LastSquare.Piece;
+        }
         move.LastSquare.Piece = null;
         move.NextSquare.Piece.Location = move.NextSquare.Location;
-        CurrentTurn = moveColor == Color.White ? Color.Black : Color.White;
+        if (alternateTurn)
+        {
+            CurrentTurn = moveColor == Color.White ? Color.Black : Color.White;
+        }
     }
 
     public List<IPiece> GetUncapturedPieces(Color color)

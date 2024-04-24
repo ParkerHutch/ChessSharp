@@ -5,12 +5,10 @@ public static class CustomCollectionAsserter
 {
     public static void Contains(IEnumerable<Move> actualMoves, Move moveInQuestion)
     {
-
         CollectionAssert.Contains(actualMoves.ToList(), moveInQuestion, message: $"{moveInQuestion} not in [{string.Join(", ", actualMoves.ToList())}]");
     }
     public static void DoesNotContain(IEnumerable<Move> actualMoves, Move moveInQuestion)
     {
-
         CollectionAssert.DoesNotContain(actualMoves.ToList(), moveInQuestion, message: $"{moveInQuestion} should not be a valid move. Moves: [{string.Join(", ", actualMoves.ToList())}]");
     }
 }
@@ -227,6 +225,28 @@ namespace ChessUtilsTests
                 Move invalidBackPawnMove = new(backWhitePawnSquare, aheadPawnSquare);
                 CustomCollectionAsserter.DoesNotContain(backWhitePawnSquare.Piece.GetValidMoves(board, false), invalidBackPawnMove);
             }
+        }
+
+        [TestMethod]
+        public void TestMovingToLastRankAutoPromotesToQueen()
+        {
+            Board.Square whitePawnSquare = board.BoardArr[6, 0];
+            Board.Square blackPawnSquare = board.BoardArr[1, 1];
+            whitePawnSquare.Piece = new Pawn(6, 0, Color.White);
+            blackPawnSquare.Piece = new Pawn(1, 1, Color.Black);
+
+            Move whitePawnMove = new(board.BoardArr[6, 0], board.BoardArr[7, 0]);
+            Move blackPawnMove = new(board.BoardArr[1, 1], board.BoardArr[0, 1]);
+
+            CustomCollectionAsserter.Contains(whitePawnSquare.Piece.GetValidMoves(board, false), whitePawnMove);
+            CustomCollectionAsserter.Contains(blackPawnSquare.Piece.GetValidMoves(board, false), blackPawnMove);
+
+            board.ExecuteMove(whitePawnMove, false);
+            Assert.AreEqual(PieceType.Queen, board.BoardArr[7, 0].Piece.Type);
+
+            board.ExecuteMove(blackPawnMove, false);
+            Assert.AreEqual(PieceType.Queen, board.BoardArr[0, 1].Piece.Type);
+
         }
     }
 
