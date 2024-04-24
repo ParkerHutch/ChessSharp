@@ -873,7 +873,7 @@ public class Board
             // find the first index of a piece that has some valid moves
             int pieceWithMovesIndex = Enumerable.Range(randomIndex, pieces.Count - randomIndex)
                               .Concat(Enumerable.Range(0, randomIndex))
-                              .FirstOrDefault(i => pieces[i].GetValidMoves(this, true).Any());
+                              .FirstOrDefault(i => pieces[i].GetValidMoves(this, true).Any(), -1); // TODO firstOrDefault means that 0 will be the result even if there are no valid moves for any pieces
 
             if (pieceWithMovesIndex >= 0)
             {

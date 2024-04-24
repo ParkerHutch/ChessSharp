@@ -22,6 +22,16 @@ namespace ChessSharpGUI
     public partial class MainWindow : Window
     {
 
+        private readonly Dictionary<PieceType, ImageSource> pieceTypeToCapturableImage = new()
+        {
+            { PieceType.King, Images.King_Red },
+            { PieceType.Queen, Images.Queen_Red },
+            { PieceType.Rook, Images.Rook_Red },
+            { PieceType.Bishop, Images.Bishop_Red },
+            { PieceType.Knight, Images.Knight_Red },
+            { PieceType.Pawn, Images.Pawn_Red }
+        };
+
         private readonly Dictionary<PieceType, Dictionary<ChessSharp.Color, ImageSource>> pieceTypeToImage = new()
         {
             {PieceType.King, new Dictionary<ChessSharp.Color, ImageSource>()
@@ -178,6 +188,9 @@ namespace ChessSharpGUI
                 if (randomMove != null) {
                     board.ExecuteMove(randomMove);
                     Draw();
+                } else
+                {
+                    DebugTextBox.Text = "Black is in checkmate, White wins";
                 }
             }
         }
@@ -219,7 +232,14 @@ namespace ChessSharpGUI
             ClearAllMoveOverlays();
             foreach (Move move in piece.GetValidMoves(board, true))
             {
-                pieceImages[move.NextSquare.Location.Row, move.NextSquare.Location.Col].Source = Images.MoveOverlay;
+                IPiece? pieceAtSquare = move.NextSquare.Piece;
+                if (pieceAtSquare != null)
+                {
+                    pieceImages[move.NextSquare.Location.Row, move.NextSquare.Location.Col].Source = pieceTypeToCapturableImage[pieceAtSquare.Type];
+                } else
+                {
+                    pieceImages[move.NextSquare.Location.Row, move.NextSquare.Location.Col].Source = Images.MoveOverlay;
+                }
             }
         }
         private void Window_MouseDown(object sender, MouseEventArgs e)
