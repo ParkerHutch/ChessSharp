@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using static ChessSharp.Board;
 using static ChessSharp.Pawn;
 
@@ -728,6 +729,13 @@ public class King(int row, int col, Color color) : IPiece
 
 public class Board
 {
+    public enum GameState
+    {
+        Checkmate,
+        Stalemate,
+        Ongoing
+    }
+
     public Color CurrentTurn { get; set; } = Color.White;
     // Return true and store the square at (row, col) if that position is in the bounds of the board
     public bool GetSquareAt(int row, int col, out Square? square)
@@ -826,6 +834,36 @@ public class Board
         }
         return false;
     }
+    public List<Move> GetAllMovesForCurrentPlayer()
+    {
+        List<Move> moves = new List<Move>();
+        List<IPiece> pieces = GetUncapturedPieces(CurrentTurn);
+        foreach (IPiece piece in pieces)
+        {
+            foreach (Move move in piece.GetValidMoves(this, true))
+            {
+                moves.Add(move);
+            }
+        }
+        //moves = pieces.SelectMany(x => x.GetValidMoves(this, true))
+        return moves;
+    }
+
+    public GameState GetGameState()
+    {
+        if (GetAllMovesForCurrentPlayer().Count == 0)
+        {
+            if (IsKingInCheck(CurrentTurn))
+            {
+                return GameState.Checkmate;
+            } else
+            {
+                return GameState.Stalemate;
+            }
+        }
+        return GameState.Ongoing;
+    }
+
     public bool MoveDoesNotResultInCheckOnOwnKing(Move move)
     {
         // ideas: 

@@ -309,10 +309,10 @@ namespace ChessSharpGUI
 
         private async Task GameLoop()
         {
-            while (true) // TODO should be board.gameOver or something
+            while (true) // TODO should be not board.gameOver or something
             {
                 await Task.Delay(100);
-                if (board.CurrentTurn == ChessSharp.Color.Black)
+                if (board.GetGameState() == GameState.Ongoing && board.CurrentTurn == ChessSharp.Color.Black)
                 {
                     DebugTextBox.Text = $"Black to move";
                     Move? randomMove = board.GetRandomMoveForColor(ChessSharp.Color.Black);
@@ -323,14 +323,18 @@ namespace ChessSharpGUI
                     }
                     else
                     {
-                        if (board.IsKingInCheck(ChessSharp.Color.Black))
-                        {
-                            DebugTextBox.Text = "Black is in checkmate, White wins";
-                        } else
-                        {
-                            DebugTextBox.Text = "Stalemate";
-                        }
+                        DebugTextBox.Text = "Could not find a move for black...";
                     }
+                } else if (board.GetGameState() != GameState.Ongoing)
+                {
+                    string text = board.GetGameState() switch
+                    {
+                        GameState.Stalemate => "Stalemate",
+                        GameState.Checkmate => $"{(board.CurrentTurn == ChessSharp.Color.White ? "Black" : "White")} wins by checkmate",
+                        _ => "Invalid game state"
+                    };
+                    DebugTextBox.Text = text;
+                    //Draw();
                 }
                 //Draw();
             }

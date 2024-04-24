@@ -18,6 +18,48 @@ public static class CustomCollectionAsserter
 namespace ChessUtilsTests
 {
     [TestClass]
+    public class TestGameStates
+    {
+        [TestMethod]
+        public void TestNormalBoardHasOngoingGameState()
+        {
+            Board board = new(false);
+            Assert.AreEqual(Board.GameState.Ongoing, board.GetGameState());
+        }
+
+        [TestMethod]
+        public void TestNoKingMovesIsStalemate()
+        {
+            Board board = new(true);
+            board.BoardArr[0, 0].Piece = new King(0, 0, Color.White);
+            board.BoardArr[1, 1].Piece = new Rook(1, 1, Color.Black);
+            board.BoardArr[2, 1].Piece = new Rook(2, 1, Color.Black);
+            Assert.AreEqual(Board.GameState.Stalemate, board.GetGameState());
+        }
+
+        [TestMethod]
+        public void TestNotStalemateIfNoWhiteKingMovesAndBlackToMove()
+        {
+            Board board = new(true);
+            board.BoardArr[0, 0].Piece = new King(0, 0, Color.White);
+            board.BoardArr[1, 1].Piece = new Rook(1, 1, Color.Black);
+            board.BoardArr[2, 1].Piece = new Rook(2, 1, Color.Black);
+            board.CurrentTurn = Color.Black;
+            Assert.AreEqual(Board.GameState.Ongoing, board.GetGameState());
+        }
+
+        [TestMethod]
+        public void TestLadderCheckMate()
+        {
+            Board board = new(true);
+            board.BoardArr[0, 0].Piece = new King(0, 0, Color.White);
+            board.BoardArr[2, 0].Piece = new Rook(2, 0, Color.Black);
+            board.BoardArr[3, 1].Piece = new Rook(3, 1, Color.Black);
+            Assert.AreEqual(Board.GameState.Checkmate, board.GetGameState());
+        }
+    }
+
+    [TestClass]
     public class TestChecks
     {
         [TestMethod]
