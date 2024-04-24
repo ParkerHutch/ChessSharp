@@ -22,7 +22,7 @@ namespace ChessSharpGUI
     public partial class MainWindow : Window
     {
 
-        private readonly Dictionary<PieceType, ImageSource> pieceTypeToCapturableImage = new()
+        private readonly Dictionary<PieceType, ImageSource> capturablePieceTypeToImage = new()
         {
             { PieceType.King, Images.King_Red },
             { PieceType.Queen, Images.Queen_Red },
@@ -133,65 +133,19 @@ namespace ChessSharpGUI
             return images;
         }
 
-        //private Image[,] SetupPieceImages()
-        //{
-        //    Image[,] images = new Image[rows, cols];
-        //    PieceGrid.Rows = rows;
-        //    PieceGrid.Columns = cols;
-
-        //    //for (int r = 0; r < rows; r++)
-        //    //{
-        //    //    for (int c = 0; c < cols; c++)
-        //    //    {
-
-        //    //        Image image = new Image
-        //    //        {
-        //    //            Source = (r + c) % 2 == 0 ? Images.Black : Images.White
-        //    //        };
-
-        //    //        images[r, c] = image;
-        //    //        GameGrid.Children.Add(image);
-
-        //    //    }
-        //    //}
-        //    return images;
-        //}
-
-        // see https://www.nbdtech.com/Blog/archive/2010/06/21/wpf-adorners-part-1-ndash-what-are-adorners.aspx
-        //class FourBoxes : Adorner
-        //{
-        //    public FourBoxes(UIElement adornedElement) :
-        //        base(adornedElement)
-        //    {
-        //    }
-
-        //    protected override void OnRender(System.Windows.Media.DrawingContext drawingContext)
-        //    {
-        //        drawingContext.DrawRectangle(Brushes.Red, null, new System.Windows.Rect(0, 0, 5, 5));
-        //        drawingContext.DrawRectangle(Brushes.Red, null, new System.Windows.Rect(0, ActualHeight - 5, 5, 5));
-        //        drawingContext.DrawRectangle(Brushes.Red, null, new System.Windows.Rect(ActualWidth - 5, 0, 5, 5));
-        //        drawingContext.DrawRectangle(Brushes.Red, null, new System.Windows.Rect(ActualWidth - 5, ActualHeight - 5, 5, 5));
-        //    }
-        //}
-
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Draw();
             await GameLoop();
-            //AdornerLayer.GetAdornerLayer(GameGrid).Add(new FourBoxes(GameGrid));
         }
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            DebugTextBox.Text = $"Key clicked: {e.Key}";
             if (e.Key == Key.Space)
             {
                 Move? randomMove = board.GetRandomMoveForColor(ChessSharp.Color.Black);
                 if (randomMove != null) {
                     board.ExecuteMove(randomMove);
                     Draw();
-                } else
-                {
-                    DebugTextBox.Text = "Black is in checkmate, White wins";
                 }
             }
         }
@@ -236,7 +190,7 @@ namespace ChessSharpGUI
                 IPiece? pieceAtSquare = move.NextSquare.Piece;
                 if (pieceAtSquare != null)
                 {
-                    pieceImages[move.NextSquare.Location.Row, move.NextSquare.Location.Col].Source = pieceTypeToCapturableImage[pieceAtSquare.Type];
+                    pieceImages[move.NextSquare.Location.Row, move.NextSquare.Location.Col].Source = capturablePieceTypeToImage[pieceAtSquare.Type];
                 } else
                 {
                     pieceImages[move.NextSquare.Location.Row, move.NextSquare.Location.Col].Source = Images.MoveOverlay;
@@ -250,31 +204,25 @@ namespace ChessSharpGUI
             if (square != null && selectedPiece != null)
             {
                 Move? move = selectedPiece.GetValidMoves(board, true).FirstOrDefault(x => x.NextSquare == square);
-                DebugTextBox.Text = $"Moves: {string.Join(", ", selectedPiece.GetValidMoves(board, true))}";
                 if (move != null)
                 {
                     // move the piece
-                    DebugTextBox.Text = $"Can do this move: {move}";
                     board.ExecuteMove(move);
                     selectedPiece = null;
                     DrawGrid();
                 } else
                 {
-                    DebugTextBox.Text = $"Can't move there!";
                     if (square.Piece != null && square.Piece.Color == board.CurrentTurn)
                     {
                         // same logic as the outside else for the grandparent if here
                         selectedPiece = square.Piece;
                         HighlightValidMovesForPiece(square.Piece);
-                        //this.InvalidateVisual();
                     }
                 }
             }
             else if (square != null && square.Piece != null && square.Piece.Color == board.CurrentTurn)
             {
-                DebugTextBox.Text = $"Square clicked: {(square.Location.Row, square.Location.Col)}";
                 selectedPiece = square.Piece;
-                DebugTextBox.Text = $"Moves: {string.Join(", ", selectedPiece.GetValidMoves(board, true))}";
                 HighlightValidMovesForPiece(square.Piece);
             }
         }
@@ -294,7 +242,7 @@ namespace ChessSharpGUI
                         IPiece piece = board.BoardArr[r, c].Piece!;
                         if (piece.Type == PieceType.King && board.IsKingInCheck(piece.Color))
                         {
-                            pieceImages[r, c].Source = pieceTypeToCapturableImage[PieceType.King];
+                            pieceImages[r, c].Source = capturablePieceTypeToImage[PieceType.King];
                         } else
                         {
                             pieceImages[r, c].Source = pieceTypeToImage[piece.Type][piece.Color];
@@ -309,12 +257,11 @@ namespace ChessSharpGUI
 
         private async Task GameLoop()
         {
-            while (true) // TODO should be not board.gameOver or something
+            while (board.GetGameState() == GameState.Ongoing) // TODO should be not board.gameOver or something
             {
                 await Task.Delay(100);
                 if (board.GetGameState() == GameState.Ongoing && board.CurrentTurn == ChessSharp.Color.Black)
                 {
-                    DebugTextBox.Text = $"Black to move";
                     Move? randomMove = board.GetRandomMoveForColor(ChessSharp.Color.Black);
                     if (randomMove != null)
                     {
