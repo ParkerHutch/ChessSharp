@@ -119,6 +119,8 @@ public class Rook(int row, int col, Color color) : IPiece
 
     Location IPiece.Location { get; set; } = new(row, col);
 
+    public bool HasMoved { get; set; } = false;
+
     public IEnumerable<Move> GetValidMoves(Board board, bool ensureNoCheckOnFriendlyKing)
     {
         List<Move> validMoves = new List<Move>();
@@ -443,6 +445,104 @@ public class King(int row, int col, Color color) : IPiece
 
     Location IPiece.Location { get; set; } = new(row, col);
 
+    public bool HasMoved { get; set; } = false;
+
+    public IEnumerable<CastleMove> GetCastleMoves(Board board)
+    {
+        if (board.IsKingInCheck(Color))
+        {
+            return [];
+        }
+
+        List<CastleMove> castleMoves = [];
+        Location myLoc = (this as IPiece).Location;
+
+        if (!HasMoved)
+        {
+            
+            int backRow = Color == Color.White ? 0 : 7;
+            Rook? cornerRook1 = board.BoardArr[backRow, 0].Piece as Rook;
+            Rook? cornerRook2 = board.BoardArr[backRow, 7].Piece as Rook;
+
+            bool noPiecesInPathToCornerRook1 = true;
+            bool noPiecesInPathToCornerRook2 = true;
+
+            for (int col = 1; col < myLoc.Col; col++)
+            {
+                if (board.BoardArr[backRow, col].Piece != null)
+                {
+                    noPiecesInPathToCornerRook1 = false;
+                    break;
+                }
+            }
+
+            for (int col = myLoc.Col + 1; col < 7; col++)
+            {
+                if (board.BoardArr[backRow, col].Piece != null)
+                {
+                    noPiecesInPathToCornerRook2 = false;
+                    break;
+                }
+            }
+
+            bool noEnemyPiecesAttackPathToCornerRook1 = true;
+            bool noEnemyPiecesAttackPathToCornerRook2 = true;
+
+            
+            List<IPiece> enemyPieces = board.GetUncapturedPieces(Color == Color.White ? Color.Black : Color.White);
+            foreach (IPiece piece in enemyPieces)
+            {
+                // the enemy king will never block this castle if it hasn't moved
+                if (piece is King enemyKing && !enemyKing.HasMoved)
+                {
+                    continue;
+                }
+                else
+                {
+                    foreach (Move move in piece.GetValidMoves(board, false))
+                    {
+                        // can castle if the move attacks column 0 or 7 on the back row, but not in between
+                        if (move.NextSquare.Location.Row == backRow && move.NextSquare.Location.Col > 0 && move.NextSquare.Location.Col < 7)
+                        {
+                            if (move.NextSquare.Location.Col < myLoc.Col)
+                            {
+                                noEnemyPiecesAttackPathToCornerRook1 = false;
+                            }
+                            else
+                            {
+                                noEnemyPiecesAttackPathToCornerRook2 = false;
+                            }
+                        }
+                    }
+                }
+            }
+
+            bool canCastleToCornerRook1 = cornerRook1 != null && !cornerRook1.HasMoved && noPiecesInPathToCornerRook1 && noEnemyPiecesAttackPathToCornerRook1;
+            bool canCastleToCornerRook2 = cornerRook2 != null && !cornerRook2.HasMoved && noPiecesInPathToCornerRook2 && noEnemyPiecesAttackPathToCornerRook2;
+            if (canCastleToCornerRook1)
+            {
+                CastleMove castleMove = new(
+                    kingLastSquare: board.BoardArr[backRow, myLoc.Col],
+                    kingNextSquare: board.BoardArr[backRow, 1],
+                    rookLastSquare: board.BoardArr[backRow, 0],
+                    rookNextSquare: board.BoardArr[backRow, 2]
+                    ); 
+                castleMoves.Add(castleMove);
+            }
+            if (canCastleToCornerRook2)
+            {
+                CastleMove castleMove = new(
+                    kingLastSquare: board.BoardArr[backRow, myLoc.Col],
+                    kingNextSquare: board.BoardArr[backRow, 5],
+                    rookLastSquare: board.BoardArr[backRow, 7],
+                    rookNextSquare: board.BoardArr[backRow, 4]
+                    );
+                castleMoves.Add(castleMove);
+            }
+        }
+        return castleMoves;
+    }
+
     public IEnumerable<Move> GetValidMoves(Board board, bool ensureNoCheckOnFriendlyKing)
     {
         List<Move> validMoves = [];
@@ -468,10 +568,14 @@ public class King(int row, int col, Color color) : IPiece
             }
         }
 
+        
+
         if (ensureNoCheckOnFriendlyKing)
         {
             validMoves = validMoves.Where(x => board.MoveDoesNotResultInCheckOnOwnKing(x)).ToList();
         }
+
+        validMoves = validMoves.Concat(GetCastleMoves(board)).ToList();
 
         return validMoves;
     }

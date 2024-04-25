@@ -854,5 +854,147 @@ namespace ChessUtilsTests
                 }
             }
         }
+
+        [TestMethod]
+        public void TestWhiteCanCastleIfEmptyBoardAndNoMovesMade()
+        {
+            Board.Square kingSquare = board.BoardArr[0, 3];
+            Board.Square rook1Square = board.BoardArr[0, 0];
+            Board.Square rook2Square = board.BoardArr[0, 7];
+            rook1Square.Piece = new Rook(0, 0, Color.White);
+            rook2Square.Piece = new Rook(0, 7, Color.White);
+            kingSquare.Piece = new King(0, 3, Color.White);
+
+            CustomCollectionAsserter.Contains(kingSquare.Piece.GetValidMoves(board, false), 
+                new CastleMove(
+                    kingLastSquare: board.BoardArr[0, kingSquare.Location.Col],
+                    kingNextSquare: board.BoardArr[0, 1],
+                    rookLastSquare: board.BoardArr[0, 0],
+                    rookNextSquare: board.BoardArr[0, 2]
+                    ));
+            CustomCollectionAsserter.Contains(kingSquare.Piece.GetValidMoves(board, false),
+                new CastleMove(
+                    kingLastSquare: board.BoardArr[0, kingSquare.Location.Col],
+                    kingNextSquare: board.BoardArr[0, 5],
+                    rookLastSquare: board.BoardArr[0, 7],
+                    rookNextSquare: board.BoardArr[0, 4]
+                    ));
+        }
+
+        [TestMethod]
+        public void TestBlackCanCastleIfEmptyBoardAndNoMovesMade()
+        {
+            Board.Square kingSquare = board.BoardArr[7, 3];
+            Board.Square rook1Square = board.BoardArr[7, 0];
+            Board.Square rook2Square = board.BoardArr[7, 7];
+            rook1Square.Piece = new Rook(7, 0, Color.Black);
+            rook2Square.Piece = new Rook(7, 7, Color.Black);
+            kingSquare.Piece = new King(7, 3, Color.Black);
+
+            CustomCollectionAsserter.Contains(kingSquare.Piece.GetValidMoves(board, false),
+                new CastleMove(
+                    kingLastSquare: board.BoardArr[7, kingSquare.Location.Col],
+                    kingNextSquare: board.BoardArr[7, 1],
+                    rookLastSquare: board.BoardArr[7, 0],
+                    rookNextSquare: board.BoardArr[7, 2]
+                    ));
+            CustomCollectionAsserter.Contains(kingSquare.Piece.GetValidMoves(board, false),
+                new CastleMove(
+                    kingLastSquare: board.BoardArr[7, kingSquare.Location.Col],
+                    kingNextSquare: board.BoardArr[7, 5],
+                    rookLastSquare: board.BoardArr[7, 7],
+                    rookNextSquare: board.BoardArr[7, 4]
+                    ));
+        }
+
+        [TestMethod]
+        public void TestCannotCastleForInitialBoard()
+        {
+            board = new(false);
+            Board.Square whiteKingSquare = board.BoardArr[0, 3];
+
+            CustomCollectionAsserter.DoesNotContain(whiteKingSquare.Piece.GetValidMoves(board, false),
+                new CastleMove(
+                    kingLastSquare: board.BoardArr[0, whiteKingSquare.Location.Col],
+                    kingNextSquare: board.BoardArr[0, 1],
+                    rookLastSquare: board.BoardArr[0, 0],
+                    rookNextSquare: board.BoardArr[0, 2]
+                    ));
+            CustomCollectionAsserter.DoesNotContain(whiteKingSquare.Piece.GetValidMoves(board, false),
+                new CastleMove(
+                    kingLastSquare: board.BoardArr[0, whiteKingSquare.Location.Col],
+                    kingNextSquare: board.BoardArr[0, 5],
+                    rookLastSquare: board.BoardArr[0, 7],
+                    rookNextSquare: board.BoardArr[0, 4]
+                    ));
+        }
+
+        [TestMethod]
+        public void TestCannotCastleWhenBlockedByEnemyKing()
+        {
+            Board.Square whiteKingSquare = board.BoardArr[0, 3];
+            whiteKingSquare.Piece = new King(0, 3, Color.White);
+            Board.Square blackKingSquare = board.BoardArr[1, 1];
+            blackKingSquare.Piece = new King(1, 1, Color.Black);
+
+            CustomCollectionAsserter.DoesNotContain(whiteKingSquare.Piece.GetValidMoves(board, false),
+                new CastleMove(
+                    kingLastSquare: board.BoardArr[0, whiteKingSquare.Location.Col],
+                    kingNextSquare: board.BoardArr[0, 1],
+                    rookLastSquare: board.BoardArr[0, 0],
+                    rookNextSquare: board.BoardArr[0, 2]
+                    ));
+        }
+
+        [TestMethod]
+        public void TestCannotCastleIfRookHasPriorMove()
+        {
+            Board.Square kingSquare = board.BoardArr[0, 3];
+            kingSquare.Piece = new King(0, 3, Color.White);
+            Board.Square rookSquare = board.BoardArr[0, 0];
+            rookSquare.Piece = new Rook(0, 0, Color.White);
+
+            board.ExecuteMove(new Move(rookSquare, board.BoardArr[0, 1]), true);
+            
+
+            CustomCollectionAsserter.DoesNotContain(kingSquare.Piece.GetValidMoves(board, false),
+                new CastleMove(
+                    kingLastSquare: board.BoardArr[0, kingSquare.Location.Col],
+                    kingNextSquare: board.BoardArr[0, 1],
+                    rookLastSquare: board.BoardArr[0, 0],
+                    rookNextSquare: board.BoardArr[0, 2]
+                    ));
+
+            board.ExecuteMove(new Move(board.BoardArr[0, 1], rookSquare), false);
+            CustomCollectionAsserter.DoesNotContain(kingSquare.Piece.GetValidMoves(board, false),
+                new CastleMove(
+                    kingLastSquare: board.BoardArr[0, kingSquare.Location.Col],
+                    kingNextSquare: board.BoardArr[0, 1],
+                    rookLastSquare: board.BoardArr[0, 0],
+                    rookNextSquare: board.BoardArr[0, 2]
+            ));
+
+        }
+
+        [TestMethod]
+        public void TestCannotCastleIfInCheck()
+        {
+            Board.Square kingSquare = board.BoardArr[0, 3];
+            kingSquare.Piece = new King(0, 3, Color.White);
+            Board.Square rookSquare = board.BoardArr[0, 0];
+            rookSquare.Piece = new Rook(0, 0, Color.White);
+
+            board.BoardArr[0, 5].Piece = new Rook(0, 5, Color.Black);
+
+            Assert.IsTrue(board.IsKingInCheck(Color.White));
+
+            CustomCollectionAsserter.DoesNotContain(kingSquare.Piece.GetValidMoves(board, false),
+                new CastleMove(
+                    kingLastSquare: board.BoardArr[0, kingSquare.Location.Col],
+                    kingNextSquare: board.BoardArr[0, 1],
+                    rookLastSquare: board.BoardArr[0, 0],
+                    rookNextSquare: board.BoardArr[0, 2]
+                    ));
+        }
     }
 }

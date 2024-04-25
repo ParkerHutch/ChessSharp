@@ -51,6 +51,21 @@ public class Move(Square lastSquare, Square nextSquare)
     }
 }
 
+public class CastleMove : Move
+{
+    public readonly Square KingLastSquare;
+    public readonly Square KingNextSquare;
+    public readonly Square RookLastSquare;
+    public readonly Square RookNextSquare;
+    public CastleMove(Square kingLastSquare, Square kingNextSquare, Square rookLastSquare, Square rookNextSquare) : base(kingLastSquare, kingNextSquare)
+    {
+        KingLastSquare = kingLastSquare; 
+        KingNextSquare = kingNextSquare;
+        RookLastSquare = rookLastSquare;
+        RookNextSquare = rookNextSquare;
+    }
+}
+
 public class Board
 {
     public Color CurrentTurn { get; set; } = Color.White;
@@ -137,15 +152,13 @@ public class Board
             for (int col = 0; col < 8; col++)
             {
                 IPiece? piece = BoardArr[row, col].Piece;
-                if (piece != null)
+                // the enemy king will never put this king in check, so exclude it from the attacked squares search
+                if (piece != null && piece.Color != kingColor && piece.Type != PieceType.King)
                 {
-                    if (piece.Color != kingColor)
+                    var attackedSquares = piece.GetValidMoves(this, false).Select(x => x.NextSquare);
+                    if (attackedSquares.Any(x => x.Piece != null && x.Piece.Type == PieceType.King && x.Piece.Color == kingColor))
                     {
-                        var nextSquares = piece.GetValidMoves(this, false).Select(x => x.NextSquare);
-                        if (nextSquares.Any(x => x.Piece != null && x.Piece.Type == PieceType.King && x.Piece.Color == kingColor))
-                        {
-                            return true;
-                        }
+                        return true;
                     }
                 }
             }
@@ -182,8 +195,13 @@ public class Board
         return GameState.Ongoing;
     }
 
+
     public bool MoveDoesNotResultInCheckOnOwnKing(Move move)
     {
+        if (move is CastleMove)
+        {
+            return true; // assuming that the castle move validation ensures the castle doesn't result in a check on the king
+        }
         // 1. Store the pieces that were previously at the move's lastSquare and nextSquare squares
         IPiece oldLastSquarePiece = move.LastSquare.Piece!;
         IPiece? oldNextSquarePiece = move.NextSquare.Piece;
@@ -211,21 +229,49 @@ public class Board
     {
         // Assumption: the move is valid and LastSquare.Piece is not null
         Color moveColor = move.LastSquare.Piece!.Color;
-        bool moveIsPawnPromotion =
+
+        if (move is CastleMove castleMove)
+        {
+            castleMove.KingNextSquare.Piece = castleMove.KingLastSquare.Piece;
+            castleMove.RookNextSquare.Piece = castleMove.RookLastSquare.Piece;
+            castleMove.KingNextSquare.Piece!.Location = castleMove.KingNextSquare.Location;
+            castleMove.RookNextSquare.Piece!.Location = castleMove.RookNextSquare.Location;
+            if (alternateTurn)
+            {
+                ((King)castleMove.KingNextSquare.Piece).HasMoved = true;
+                ((Rook)castleMove.RookNextSquare.Piece).HasMoved = true;
+            }
+            
+            castleMove.KingLastSquare.Piece = null;
+            castleMove.RookLastSquare.Piece = null;
+        } else
+        {
+            bool moveIsPawnPromotion =
             (
                 (moveColor == Color.White && move.NextSquare.Location.Row == 7) ||
                 (moveColor == Color.Black && move.NextSquare.Location.Row == 0)
             ) && move.LastSquare.Piece!.Type == PieceType.Pawn;
-        
-        if (moveIsPawnPromotion)
-        {
-            move.NextSquare.Piece = new Queen(move.NextSquare.Location.Row, move.NextSquare.Location.Col, moveColor);
-        } else
-        {
-            move.NextSquare.Piece = move.LastSquare.Piece;
+
+            if (moveIsPawnPromotion)
+            {
+                move.NextSquare.Piece = new Queen(move.NextSquare.Location.Row, move.NextSquare.Location.Col, moveColor);
+            }
+            else
+            {
+                move.NextSquare.Piece = move.LastSquare.Piece;
+            }
+            move.LastSquare.Piece = null;
+            move.NextSquare.Piece.Location = move.NextSquare.Location;
+
+            if (move.NextSquare.Piece is Rook rook && alternateTurn)
+            {
+                rook.HasMoved = true;
+            } else if (move.NextSquare.Piece is King king && alternateTurn)
+            {
+                king.HasMoved = true;
+            }
         }
-        move.LastSquare.Piece = null;
-        move.NextSquare.Piece.Location = move.NextSquare.Location;
+
         if (alternateTurn)
         {
             CurrentTurn = moveColor == Color.White ? Color.Black : Color.White;
